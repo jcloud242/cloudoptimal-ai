@@ -1,18 +1,18 @@
 import { useState } from "react";
 
-const promptDescriptions = {
-  design: "Get AI-powered architecture recommendations for new workloads across AWS, Azure, and GCP",
-  optimize: "Analyze existing infrastructure for cost savings and performance improvements", 
-  migrate: "Create migration plans from on-premises or legacy systems to the cloud"
+    const promptOptions = [
+      { value: 'design', label: 'Design Architecture', description: 'Get architecture recommendations with CAF & Well-Architected framework integration' },
+      { value: 'optimize', label: 'Optimize Existing', description: 'Optimize current cloud architecture for cost, performance, and compliance' },
+      { value: 'migrate', label: 'Migration Planning', description: 'Plan migration strategy with risk assessment and timeline' },
+      { value: 'multiProvider', label: 'Multi-Cloud Strategy', description: 'Design resilient multi-cloud architectures leveraging multiple providers' }
+    ];const placeholderText = {
+  design: "Describe your workload with business context (e.g., 'E-commerce platform, 50k users/day, need 99.9% uptime, PCI compliance, global audience')",
+  optimize: "Describe current infrastructure and pain points (e.g., 'AWS setup: EC2 t3.large, RDS MySQL, high costs, slow response times')",
+  migrate: "Describe on-premises system and constraints (e.g., 'Legacy .NET app, SQL Server, 1000 users, compliance requirements, budget constraints')",
+  multiProvider: "Describe requirements that benefit from multi-cloud (e.g., 'Global app, disaster recovery, avoid vendor lock-in, regulatory compliance across regions')"
 };
 
-const placeholderText = {
-  design: "Describe your application or workload requirements (e.g., 'A web application with 10,000 daily users, requiring high availability and auto-scaling')",
-  optimize: "Describe your current cloud infrastructure setup (e.g., 'Running on AWS EC2 t3.large instances with RDS MySQL, experiencing high costs')",
-  migrate: "Describe your on-premises system (e.g., 'Legacy Java application on physical servers with Oracle database, 500 concurrent users')"
-};
-
-export default function PromptInput({ onSubmit, templates, disabled }) {
+export default function PromptInput({ onSubmit, templates, disabled, onClearSession }) {
   const [selectedPrompt, setSelectedPrompt] = useState("design");
   const [userInput, setUserInput] = useState("");
 
@@ -52,7 +52,7 @@ export default function PromptInput({ onSubmit, templates, disabled }) {
               Selected: {selectedPrompt.charAt(0).toUpperCase() + selectedPrompt.slice(1)} Architecture
             </p>
             <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-              {promptDescriptions[selectedPrompt]}
+              {promptOptions.find(option => option.value === selectedPrompt)?.description || ''}
             </p>
           </div>
         </div>
@@ -70,13 +70,27 @@ export default function PromptInput({ onSubmit, templates, disabled }) {
           />
         </div>
 
-        <button 
-          type="submit" 
-          disabled={!userInput.trim() || disabled}
-          className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-        >
-          {disabled ? "Getting Recommendations..." : "Get AI Recommendations"}
-        </button>
+        <div className="flex gap-2">
+          <button 
+            type="submit" 
+            disabled={!userInput.trim() || disabled}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+          >
+            {disabled ? "Getting Recommendations..." : "Get AI Recommendations"}
+          </button>
+          
+          {onClearSession && (
+            <button 
+              type="button"
+              onClick={onClearSession}
+              disabled={disabled}
+              className="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:bg-gray-400 dark:disabled:bg-gray-700 disabled:cursor-not-allowed transition-colors"
+              title="Clear current session for fresh AI context"
+            >
+              Clear Session
+            </button>
+          )}
+        </div>
       </form>
     </div>
   );

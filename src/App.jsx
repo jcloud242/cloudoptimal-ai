@@ -5,29 +5,25 @@ import DiagramView from "./components/DiagramView";
 import SessionHistory from "./components/SessionHistory";
 import ThemeToggle from "./components/ThemeToggle";
 
-import designPrompt from "./prompts/designPrompt.js";
-import optimizePrompt from "./prompts/optimizePrompt.js";
-import migratePrompt from "./prompts/migratePrompt.js";
-
-// Import test utilities for debugging
-import { testApiKeyDirect } from "./utils/testApiDirect.js";
-import { listAvailableModels } from "./utils/listModels.js";
-import { testNewGeminiKey } from "./utils/testNewKey.js";
+import { designPrompt } from './prompts/designPrompt';
+import { optimizePrompt } from './prompts/optimizePrompt';
+import { migratePrompt } from './prompts/migratePrompt';
+import { multiProviderPrompt } from './prompts/multiProviderPrompt';
 
 import { getAIResponse } from "./services/aiService";
 import { saveSession } from "./utils/sessionStorage";
-import './utils/debugModels.js'; // Make debug utilities available
-
-const templates = {
-  design: designPrompt,
-  optimize: optimizePrompt,
-  migrate: migratePrompt,
-};
 
 export default function App() {
+  const templates = {
+    design: designPrompt,
+    optimize: optimizePrompt,
+    migrate: migratePrompt,
+    multiProvider: multiProviderPrompt
+  };
   const [aiResponse, setAIResponse] = useState("");
   const [nodes, setNodes] = useState([]);
   const [edges, setEdges] = useState([]);
+  const [mermaidCode, setMermaidCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentSession, setCurrentSession] = useState(null);
@@ -38,10 +34,11 @@ export default function App() {
     setAIResponse("");
     setNodes([]);
     setEdges([]);
+    setMermaidCode("");
     
     try {
       const template = templates[promptType];
-      const promptText = template.sample_prompt
+      const promptText = `FRESH SESSION - IGNORE ANY PREVIOUS CONTEXT\n\n${template.sample_prompt}`
         .replace("{{WORKLOAD_DESCRIPTION}}", userInput)
         .replace("{{INFRA_DESCRIPTION}}", userInput)
         .replace("{{SYSTEM_DESCRIPTION}}", userInput);
@@ -60,21 +57,51 @@ export default function App() {
           setEdges(parsedData.architecture_edges);
         }
         
+        // Handle Mermaid diagrams
+        if (parsedData.architecture_diagram) {
+          console.log("📊 Found architecture diagram:", parsedData.architecture_diagram);
+          setMermaidCode(parsedData.architecture_diagram);
+        } else {
+          console.log("❌ No architecture_diagram found in response");
+        }
+        
         console.log("Parsed AI response:", parsedData);
         
       } catch (parseError) {
+        console.log("❌ JSON parse error:", parseError.message);
+        console.log("Raw response:", response);
+        
         // If not JSON, try to extract JSON from response text
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
-            const extracted = JSON.parse(jsonMatch[0]);
+            // Fix common JSON syntax errors before parsing
+            let jsonText = jsonMatch[0];
+            
+            // Remove trailing commas before closing braces/brackets
+            jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+            
+            const extracted = JSON.parse(jsonText);
+            
+            // Handle architecture diagrams
             if (extracted.architecture_nodes && extracted.architecture_edges) {
               setNodes(extracted.architecture_nodes);
               setEdges(extracted.architecture_edges);
             }
-            console.log("Extracted JSON from response:", extracted);
+            
+            // Handle Mermaid diagrams
+            if (extracted.architecture_diagram) {
+              console.log("📊 Found architecture diagram in extracted JSON:", extracted.architecture_diagram);
+              setMermaidCode(extracted.architecture_diagram);
+            }
+            
+            console.log("Extracted and fixed JSON from response:", extracted);
+            
+            // Update the AI response with the fixed JSON for display
+            setAIResponse(JSON.stringify(extracted, null, 2));
+            
           } catch (extractError) {
-            console.log("Could not extract valid JSON from response");
+            console.log("❌ Could not extract valid JSON from response:", extractError.message);
           }
         } else {
           console.log("No structured data in AI response");
@@ -122,7 +149,14 @@ export default function App() {
         
         <SessionHistory onLoadSession={handleLoadSession} />
         
-        <PromptInput onSubmit={handleSubmit} templates={templates} disabled={loading} />
+        <PromptInput onSubmit={handleSubmit} templates={templates} disabled={loading} onClearSession={() => {
+          setAIResponse("");
+          setNodes([]);
+          setEdges([]);
+          setMermaidCode("");
+          setCurrentSession(null);
+          setError("");
+        }} />
         
         {loading && (
           <div className="flex items-center justify-center p-8">
@@ -151,7 +185,7 @@ export default function App() {
         )}
         
         <ResultDisplay aiResponse={aiResponse} />
-        <DiagramView nodes={nodes} edges={edges} />
+        <DiagramView nodes={nodes} edges={edges} mermaidCode={mermaidCode} />
       </div>
     </div>
   );
