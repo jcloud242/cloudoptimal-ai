@@ -24,84 +24,123 @@ function parseMarkdownText(text) {
 function formatSummaryText(text) {
   if (!text) return null;
   
-  // Split on numbered sections (1. 2. 3. etc.) and other natural breaks
+  // Split on numbered sections and key markers
   const sections = text
-    .split(/(?=\d+\.\s+\*\*)|(?=\*\*Next Steps)|(?=Key benefits include:)|(?=\*\*Key Benefits:|Key Benefits:)/)
+    .split(/(?=\d+\.\s+\*\*)|(?=\*\*Next Steps)|(?=\*\*Key [Bb]enefits)/)
     .map(section => section.trim())
     .filter(section => section.length > 0);
   
   return sections.map((section, index) => {
     // Handle numbered benefits/points (1. **Something:** text)
-    const numberedMatch = section.match(/^(\d+)\.\s+\*\*(.*?)\*\*:\s*(.*)/);
+    const numberedMatch = section.match(/^(\d+)\.\s+\*\*(.*?)\*\*:\s*([\s\S]*)/);
     if (numberedMatch) {
       const [, number, title, content] = numberedMatch;
       return (
-        <div key={index} className="flex gap-3">
-          <span className="flex-shrink-0 w-6 h-6 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded-full text-sm font-semibold flex items-center justify-center">
+        <div key={index} className="flex gap-3 mb-3">
+          <span className="flex-shrink-0 w-7 h-7 bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-300 rounded-full text-sm font-semibold flex items-center justify-center mt-0.5">
             {number}
           </span>
-          <div>
-            <span className="font-semibold text-blue-700 dark:text-blue-300">{title}:</span>
-            <span className="ml-1">{parseMarkdownText(content)}</span>
+          <div className="flex-1">
+            <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              <span className="font-semibold text-blue-700 dark:text-blue-300">{title}:</span>
+              {' '}{parseMarkdownText(content.trim())}
+            </p>
           </div>
         </div>
       );
     }
     
-    // Handle "Next Steps" section
+    // Handle "Key Benefits" section
+    if (section.match(/\*\*Key [Bb]enefits/)) {
+      const benefitsContent = section.replace(/\*\*Key [Bb]enefits[^:]*:\*\*\s*/, '');
+      const benefits = benefitsContent
+        .split(/[,;]|(?=\s+[A-Z][a-z]+\s+[a-z]+)/)
+        .map(b => b.trim())
+        .filter(b => b.length > 10);
+      
+      return (
+        <div key={index} className="my-4">
+          <h5 className="font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            Key Benefits
+          </h5>
+          <ul className="space-y-2 ml-7">
+            {benefits.map((benefit, idx) => (
+              <li key={idx} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 flex gap-2">
+                <span className="text-blue-500 dark:text-blue-400 flex-shrink-0">•</span>
+                <span>{parseMarkdownText(benefit)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+    
+    // Handle "Next Steps" section with numbered sub-steps
     if (section.includes('Next Steps')) {
       const nextStepsContent = section.replace(/\*\*Next Steps[^:]*:\*\*\s*/, '');
       const steps = nextStepsContent
-        .split(/\d+\.\s+\*\*/)
+        .split(/(?=\d+\.\s+\*\*)/)
         .filter(step => step.trim())
-        .map(step => step.replace(/\*\*([^*]+)\*\*/, '$1').trim());
+        .map(step => {
+          const stepMatch = step.match(/^(\d+)\.\s+\*\*([^:]+):\*\*\s*([\s\S]*)/);
+          if (stepMatch) {
+            return {
+              number: stepMatch[1],
+              title: stepMatch[2].trim(),
+              content: stepMatch[3].trim()
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
       
-      return (
-        <div key={index}>
-          <h5 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">Next Steps for Implementation:</h5>
-          <div className="space-y-2 ml-4">
-            {steps.map((step, stepIndex) => {
-              const stepParts = step.split(':');
-              const stepTitle = stepParts[0];
-              const stepContent = stepParts.slice(1).join(':').trim();
-              
-              return (
-                <div key={stepIndex} className="flex gap-2">
-                  <span className="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 rounded text-sm font-semibold flex items-center justify-center">
-                    {stepIndex + 1}
+      if (steps.length > 0) {
+        return (
+          <div key={index} className="my-4">
+            <h5 className="font-semibold text-green-700 dark:text-green-300 mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Next Steps for Implementation
+            </h5>
+            <div className="space-y-3">
+              {steps.map((step, stepIndex) => (
+                <div key={stepIndex} className="flex gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300 rounded-full text-xs font-semibold flex items-center justify-center mt-0.5">
+                    {step.number}
                   </span>
-                  <div className="text-sm">
-                    <span className="font-semibold text-green-700 dark:text-green-300">{stepTitle}:</span>
-                    <span className="ml-1">{stepContent}</span>
+                  <div className="flex-1">
+                    <span className="font-semibold text-green-700 dark:text-green-300 block mb-1">{step.title}:</span>
+                    <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{step.content}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      );
-    }
-    
-    // Handle regular paragraphs with markdown
-    if (section.length > 150) {
-      // Split long paragraphs on sentence boundaries
-      const sentences = section.split(/(?<=\.)\s+/).filter(s => s.trim());
-      if (sentences.length > 2) {
-        return (
-          <div key={index} className="space-y-2">
-            {sentences.map((sentence, sentIndex) => (
-              <p key={sentIndex} className="text-sm leading-relaxed">
-                {parseMarkdownText(sentence)}
-              </p>
-            ))}
+              ))}
+            </div>
           </div>
         );
       }
     }
     
+    // Handle regular paragraphs - split long ones for readability
+    if (section.length > 200) {
+      const sentences = section.match(/[^.!?]+[.!?]+/g) || [section];
+      return (
+        <div key={index} className="space-y-2 mb-3">
+          {sentences.map((sentence, sentIndex) => (
+            <p key={sentIndex} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+              {parseMarkdownText(sentence.trim())}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    
     // Default paragraph with markdown parsing
     return (
-      <p key={index} className="text-sm leading-relaxed">
+      <p key={index} className="text-sm leading-relaxed text-gray-700 dark:text-gray-300 mb-3">
         {parseMarkdownText(section)}
       </p>
     );
@@ -132,53 +171,18 @@ export default function ResultDisplay({ aiResponse }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">AI Recommendations</h3>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg overflow-hidden">
+      <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-blue-900/30 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Detailed Results
+        </h3>
       </div>
-      <div className="p-4">
-        {isJson && parsedData ? (
+      <div className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-950">{isJson && parsedData ? (
           <div className="space-y-6">
-            {/* Recommended Solution */}
-            {parsedData.recommended_solution && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Recommended Solution</h4>
-                <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded border border-blue-200 dark:border-blue-800">
-                  {/* Single Provider Solution */}
-                  {parsedData.recommended_solution.recommended_provider && (
-                    <>
-                      <div className="font-medium text-blue-700 dark:text-blue-300 text-lg mb-2">
-                        Recommended Provider: {parsedData.recommended_solution.recommended_provider}
-                      </div>
-                      <div className="text-gray-700 dark:text-gray-200 mb-2">
-                        <strong>Architecture:</strong> {parsedData.recommended_solution.recommended_architecture}
-                      </div>
-                    </>
-                  )}
-                  {/* Multi-Provider Solution */}
-                  {parsedData.recommended_solution.primary_provider && (
-                    <>
-                      <div className="font-medium text-blue-700 dark:text-blue-300 text-lg mb-2">
-                        Multi-Cloud Strategy: {parsedData.recommended_solution.multi_cloud_strategy}
-                      </div>
-                      <div className="text-gray-700 dark:text-gray-200 mb-2">
-                        <strong>Primary Provider:</strong> {parsedData.recommended_solution.primary_provider}
-                      </div>
-                      <div className="text-gray-700 dark:text-gray-200 mb-2">
-                        <strong>Secondary Provider:</strong> {parsedData.recommended_solution.secondary_provider}
-                      </div>
-                    </>
-                  )}
-                  {parsedData.recommended_solution.justification && (
-                    <div className="text-gray-600 dark:text-gray-300 text-sm">
-                      <strong>Justification:</strong> {parsedData.recommended_solution.justification}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Resource Table */}
+            {/* Resource Table - FIRST */}
             {parsedData.resource_table && parsedData.resource_table.length > 0 && (
               <div>
                 <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Resource Architecture</h4>
@@ -253,7 +257,19 @@ export default function ResultDisplay({ aiResponse }) {
               </div>
             )}
 
-            {/* CSP Comparison Table */}
+            {/* Overall Summary - SECOND, right after resource table */}
+            {(parsedData.overall_recommendation || parsedData.overall_summary || parsedData.summary) && (
+              <div>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary</h4>
+                <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded border border-blue-200 dark:border-blue-800">
+                  <div className="text-gray-700 dark:text-gray-200 space-y-3">
+                    {formatSummaryText(parsedData.overall_recommendation || parsedData.overall_summary || parsedData.summary)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CSP Comparison Table - THIRD and LAST */}
             {parsedData.csp_comparison_table && parsedData.csp_comparison_table.length > 0 && (
               <div>
                 <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Cloud Provider Comparison</h4>
@@ -319,193 +335,6 @@ export default function ResultDisplay({ aiResponse }) {
                       )}
                     </tbody>
                   </table>
-                </div>
-              </div>
-            )}
-
-            {/* Migration Strategy (Multi-Provider specific) */}
-            {parsedData.migration_strategy && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Implementation Strategy</h4>
-                <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded border border-purple-200 dark:border-purple-800">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    {parsedData.migration_strategy.phase_1 && (
-                      <div>
-                        <h5 className="font-medium text-purple-700 dark:text-purple-300 mb-1">Phase 1</h5>
-                        <p className="text-sm text-gray-700 dark:text-gray-200">{parsedData.migration_strategy.phase_1}</p>
-                      </div>
-                    )}
-                    {parsedData.migration_strategy.phase_2 && (
-                      <div>
-                        <h5 className="font-medium text-purple-700 dark:text-purple-300 mb-1">Phase 2</h5>
-                        <p className="text-sm text-gray-700 dark:text-gray-200">{parsedData.migration_strategy.phase_2}</p>
-                      </div>
-                    )}
-                    {parsedData.migration_strategy.phase_3 && (
-                      <div>
-                        <h5 className="font-medium text-purple-700 dark:text-purple-300 mb-1">Phase 3</h5>
-                        <p className="text-sm text-gray-700 dark:text-gray-200">{parsedData.migration_strategy.phase_3}</p>
-                      </div>
-                    )}
-                  </div>
-                  {parsedData.migration_strategy.timeline && (
-                    <div className="mb-2">
-                      <span className="font-medium text-gray-700 dark:text-gray-200">Timeline:</span> 
-                      <span className="text-gray-600 dark:text-gray-300"> {parsedData.migration_strategy.timeline}</span>
-                    </div>
-                  )}
-                  {parsedData.migration_strategy.risk_mitigation && (
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-200">Risk Mitigation:</span> 
-                      <span className="text-gray-600 dark:text-gray-300"> {parsedData.migration_strategy.risk_mitigation}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Legacy Architecture Recommendations for backward compatibility */}
-            {parsedData.architecture_recommendations && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Architecture Recommendations</h4>
-                <div className="space-y-3">
-                  {parsedData.architecture_recommendations.map((rec, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
-                      <div className="font-medium text-blue-600 dark:text-blue-400">{rec.provider}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{rec.architecture_pattern}</div>
-                      <div className="text-sm mt-2">
-                        <span className="font-medium text-gray-700 dark:text-gray-200">Services:</span> 
-                        <span className="text-gray-600 dark:text-gray-300"> {rec.services?.join(", ")}</span>
-                      </div>
-                      {rec.estimated_cost && (
-                        <div className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                          Estimated Cost: {rec.estimated_cost}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Tradeoffs Analysis */}
-            {parsedData.tradeoffs_analysis && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Objective Analysis</h4>
-                <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded border border-yellow-200 dark:border-yellow-800">
-                  {parsedData.tradeoffs_analysis.advantages && (
-                    <div className="mb-3">
-                      <h5 className="font-medium text-green-700 dark:text-green-300 mb-1">Advantages:</h5>
-                      <ul className="text-sm text-gray-700 dark:text-gray-200 list-disc list-inside space-y-1">
-                        {parsedData.tradeoffs_analysis.advantages.map((advantage, index) => (
-                          <li key={index}>{advantage}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {parsedData.tradeoffs_analysis.disadvantages && (
-                    <div className="mb-3">
-                      <h5 className="font-medium text-red-700 dark:text-red-300 mb-1">Disadvantages:</h5>
-                      <ul className="text-sm text-gray-700 dark:text-gray-200 list-disc list-inside space-y-1">
-                        {parsedData.tradeoffs_analysis.disadvantages.map((disadvantage, index) => (
-                          <li key={index}>{disadvantage}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {parsedData.tradeoffs_analysis.considerations && (
-                    <div>
-                      <h5 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Key Considerations:</h5>
-                      <ul className="text-sm text-gray-700 dark:text-gray-200 list-disc list-inside space-y-1">
-                        {parsedData.tradeoffs_analysis.considerations.map((consideration, index) => (
-                          <li key={index}>{consideration}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Optimization Recommendations */}
-            {parsedData.optimization_recommendations && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Optimization Recommendations</h4>
-                <div className="space-y-3">
-                  {parsedData.optimization_recommendations.map((rec, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
-                      <div className="font-medium text-blue-600 dark:text-blue-400">{rec.provider}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{rec.optimization_type}</div>
-                      <div className="text-sm mt-2">
-                        <span className="font-medium text-gray-700 dark:text-gray-200">Recommendation:</span> 
-                        <span className="text-gray-600 dark:text-gray-300"> {rec.recommendation}</span>
-                      </div>
-                      {rec.cost_savings && (
-                        <div className="text-sm text-green-600 dark:text-green-400 font-medium mt-1">
-                          Potential Savings: {rec.cost_savings}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Migration Recommendations */}
-            {parsedData.migration_recommendations && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Migration Recommendations</h4>
-                <div className="space-y-3">
-                  {parsedData.migration_recommendations.map((rec, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
-                      <div className="font-medium text-blue-600 dark:text-blue-400">{rec.provider}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{rec.migration_strategy}</div>
-                      <div className="text-sm mt-2">
-                        <span className="font-medium text-gray-700 dark:text-gray-200">Approach:</span> 
-                        <span className="text-gray-600 dark:text-gray-300"> {rec.approach}</span>
-                      </div>
-                      {rec.timeline && (
-                        <div className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">
-                          Timeline: {rec.timeline}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Migration Steps */}
-            {parsedData.migration_steps && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Migration Plan</h4>
-                <div className="space-y-3">
-                  {parsedData.migration_steps.map((step, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
-                      <div className="font-medium text-blue-600 dark:text-blue-400">{step.step}</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">{step.description}</div>
-                      <div className="text-sm mt-2">
-                        <span className="font-medium text-gray-700 dark:text-gray-200">Target:</span> 
-                        <span className="text-gray-600 dark:text-gray-300"> {step.target_provider}</span>
-                      </div>
-                      <div className="text-sm">
-                        <span className="font-medium text-gray-700 dark:text-gray-200">Services:</span> 
-                        <span className="text-gray-600 dark:text-gray-300"> {step.services?.join(", ")}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Overall Summary */}
-            {(parsedData.overall_recommendation || parsedData.overall_summary || parsedData.summary) && (
-              <div>
-                <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Summary</h4>
-                <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded border border-blue-200 dark:border-blue-800">
-                  <div className="text-gray-700 dark:text-gray-200 space-y-3">
-                    {formatSummaryText(parsedData.overall_recommendation || parsedData.overall_summary || parsedData.summary)}
-                  </div>
                 </div>
               </div>
             )}

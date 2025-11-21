@@ -1,6 +1,9 @@
 export const optimizePrompt = {
-  "version": "2.0.0",
-  "role": "Expert cloud optimization advisor specializing in Well-Architected Framework analysis across AWS, Azure, and GCP.",
+  name: "Optimize Existing Infrastructure",
+  description: "Optimize current cloud architecture for cost, performance, and compliance",
+  placeholder: "Describe current infrastructure and pain points (e.g., 'AWS setup: EC2 t3.large, RDS MySQL, high costs, slow response times')",
+  version: "2.0.0",
+  role: "Expert cloud architect specializing in cost optimization and Well-Architected improvements.",
   "task_goal": "Perform comprehensive infrastructure optimization using Well-Architected principles and Cloud Adoption Framework governance.",
   "expected_output": {
     "well_architected_assessment": {

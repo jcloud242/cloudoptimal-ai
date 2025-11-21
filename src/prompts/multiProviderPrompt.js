@@ -1,6 +1,9 @@
 export const multiProviderPrompt = {
-  "version": "1.0.0",
-  "role": "Senior Cloud Solutions Architect specializing in Multi-Cloud and Hybrid-Cloud architectures",
+  name: "Multi-Cloud Strategy",
+  description: "Design resilient multi-cloud architectures leveraging multiple providers",
+  placeholder: "Describe requirements that benefit from multi-cloud (e.g., 'Global app, disaster recovery, avoid vendor lock-in, regulatory compliance across regions')",
+  version: "1.0.0",
+  role: "Expert multi-cloud and hybrid-cloud architect specializing in cross-provider strategies.",
   "task_goal": "Design resilient, distributed cloud architectures that leverage the strengths of multiple cloud providers",
   "sample_prompt": `You are a Senior Cloud Solutions Architect specializing in Multi-Cloud and Hybrid-Cloud architectures. Your role is to design resilient, distributed cloud architectures that leverage the strengths of multiple cloud providers.
 
@@ -47,11 +50,11 @@ RESPONSE MUST BE VALID JSON in this EXACT structure:
     }
   ],
   "cost_comparison": {
-    "single_cloud_aws": "Single AWS deployment cost",
-    "single_cloud_azure": "Single Azure deployment cost", 
-    "single_cloud_gcp": "Single GCP deployment cost",
-    "multi_cloud_total": "Multi-cloud total cost",
-    "cost_premium": "Additional cost for multi-cloud approach"
+    "single_cloud_aws": "Single AWS deployment cost (e.g., '$1577')",
+    "single_cloud_azure": "Single Azure deployment cost (single value, e.g., '$1650' - NOT a range)", 
+    "single_cloud_gcp": "Single GCP deployment cost (single value, e.g., '$1625' - NOT a range)",
+    "multi_cloud_total": "Multi-cloud total cost (e.g., '$2100')",
+    "cost_premium": "Additional cost percentage for multi-cloud approach (e.g., '25%')"
   },
   "tradeoffs_analysis": {
     "advantages": [
@@ -64,8 +67,31 @@ RESPONSE MUST BE VALID JSON in this EXACT structure:
       "Key technical and business considerations for multi-cloud adoption"
     ]
   },
-  "summary": "Executive summary explaining when and why multi-cloud makes sense for these requirements, including complexity vs. benefits analysis",
-  "architecture_diagram": "Professional Mermaid flowchart showing multi-cloud architecture with provider boundaries, cross-cloud connections, and data flow. Use subgraphs to show different cloud providers. Example: flowchart TD\\n    subgraph AWS\\n        ALB[ALB]\\n        EC2[EC2]\\n    end\\n    subgraph Azure\\n        AZURE_VM[Virtual Machine]\\n        AZURE_DB[(SQL Database)]\\n    end\\n    ALB --> EC2\\n    EC2 -.-> AZURE_VM\\n    AZURE_VM --> AZURE_DB",
+  "summary": "Executive summary with CLEAR STRUCTURE. Format as numbered sections with **bold headings**. Include: 1. Opening paragraph, 2. **Multi-Cloud Benefits:** explanation, 3. **Integration Strategy:** explanation, 4. **Key Benefits:** list, 5. **Next Steps for Implementation:** numbered steps",
+  "architecture_diagram": {
+    "name": "Multi-cloud architecture name",
+    "provider": "multi-cloud",
+    "nodes": [
+      {
+        "id": "unique-node-id (e.g., 'aws-lb', 'azure-vm', 'gcp-db')",
+        "label": "Short display name (max 15 chars)",
+        "layer": "One of: networking, presentation, application, data, security, or operations",
+        "type": "Service type (e.g., 'networking', 'compute', 'database', 'monitoring')",
+        "service": "Provider-specific service name for icon lookup. AWS examples: 'cloudfront', 's3', 'lambda', 'ec2', 'rds', 'dynamodb', 'apigateway'. Azure examples: 'blob', 'functions', 'virtualmachines', 'sqldatabase', 'cosmosdb', 'cdn', 'apimanagement'. GCP examples: 'cloudstorage', 'computeengine', 'cloudfunctions', 'cloudsql', 'firestore', 'cloudcdn', 'apigee'. Use lowercase, no spaces.",
+        "icon": "Lucide icon name as fallback (e.g., 'Globe', 'Server', 'Database')",
+        "description": "Detailed description for tooltip",
+        "cost": "Monthly cost (e.g., '$50')"
+      }
+    ],
+    "connections": [
+      {
+        "from": "source node id (MUST be an id from nodes array - DO NOT use external entities like 'mobile-client', 'users', 'browser')",
+        "to": "target node id (MUST be an id from nodes array - DO NOT use external entities)",
+        "label": "Connection type (e.g., 'Cross-Cloud Sync', 'Replication', 'HTTPS')",
+        "type": "Use 'dashed' for cross-cloud connections, 'solid' for intra-cloud. Each node should have max 3-4 outgoing connections for clarity."
+      }
+    ]
+  },
   "migration_strategy": {
     "phase_1": "Initial setup and primary cloud deployment",
     "phase_2": "Secondary cloud setup and integration",

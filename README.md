@@ -5,9 +5,11 @@ CloudOptimal AI is an MVP tool to help entrepreneurs, SMBs, and consultants plan
 ## Features
 
 - **Multi-cloud Architecture Recommendations**: Get AI-powered design suggestions across AWS, Azure, and GCP
+- **Interactive Architecture Diagrams**: Custom SVG diagrams with layered architecture, zoom/pan controls, and tooltips
 - **Cost Optimization**: Analyze existing infrastructure for cost and performance improvements
 - **Migration Planning**: Generate migration plans from on-premises or legacy systems
-- **Visual Diagrams**: Interactive architecture diagrams using React Flow
+- **Session Management**: Save and reload previous analyses
+- **Dark Mode**: Full dark mode support throughout the application
 
 ## Quick Start
 
@@ -43,34 +45,75 @@ CloudOptimal AI is an MVP tool to help entrepreneurs, SMBs, and consultants plan
 
 ## Usage
 
-1. Select a prompt type (Design, Optimize, or Migrate)
+1. Select a prompt type (Design, Migrate, Optimize, or Compare)
 2. Describe your workload or infrastructure requirements
-3. Click "Get AI Recommendations" 
-4. View the AI response and any generated architecture diagrams
+3. Click "Get Recommendations" 
+4. View AI-generated architecture with:
+   - Interactive layered diagram (zoom, pan, hover for details)
+   - Provider recommendation with reasoning
+   - Detailed resource table with costs
+   - Cloud service comparison table
+   - Executive summary with next steps
+
+## Key Features
+
+### Custom Architecture Diagrams
+
+The app generates interactive SVG diagrams organized into layers:
+- **Presentation Layer**: CDN, Load Balancers, WAF
+- **Application Layer**: Compute, APIs, Caching
+- **Data Layer**: Databases, Object Storage
+- **Security Layer**: IAM, Key Management, Logging
+
+**Diagram Controls:**
+- Mouse wheel to zoom (50%-300%)
+- Click and drag to pan
+- Hover over components for detailed tooltips
+- Provider-specific color themes (AWS/Azure/GCP)
+
+### Session Management
+
+- Automatically saves all analyses
+- Load previous sessions from history
+- View past recommendations and diagrams
 
 ## Project Structure
 
 ```
 src/
-├── components/          # React components
-│   ├── PromptInput.jsx     # Input form for workload descriptions
-│   ├── ResultDisplay.jsx  # AI response display
-│   └── DiagramView.jsx     # React Flow diagram renderer
-├── prompts/             # Structured AI prompt templates
-│   ├── designPrompt.js     # New architecture design prompts
-│   ├── optimizePrompt.js   # Optimization analysis prompts
-│   └── migratePrompt.js    # Migration planning prompts
-├── services/            # API and external services
-│   └── aiService.js        # Gemini AI integration
-└── App.jsx             # Main application component
+├── components/              # React components
+│   ├── ArchitectureDiagram.jsx  # Custom SVG diagram renderer (NEW)
+│   ├── DiagramView.jsx          # Diagram display wrapper
+│   ├── PromptInput.jsx          # Input form for workload descriptions
+│   ├── ResultDisplay.jsx        # AI response display
+│   ├── RecommendationCard.jsx   # Provider recommendation display
+│   ├── SessionHistory.jsx       # Previous sessions management
+│   └── ResizableDivider.jsx     # Split-panel layout
+├── schemas/                 # Data schemas and validation (NEW)
+│   └── diagramSchema.js         # Architecture diagram JSON schema
+├── prompts/                 # Structured AI prompt templates
+│   ├── designPrompt.js          # New architecture design prompts
+│   ├── optimizePrompt.js        # Optimization analysis prompts
+│   ├── migratePrompt.js         # Migration planning prompts
+│   └── multiProviderPrompt.js   # Multi-cloud comparison prompts
+├── services/                # API and external services
+│   └── aiService.js             # Gemini AI integration
+├── pages/                   # Page components
+│   ├── Home.jsx                 # Landing page
+│   ├── DesignPage.jsx           # Architecture design flow
+│   ├── MigratePage.jsx          # Migration planning flow
+│   ├── OptimizePage.jsx         # Cost optimization flow
+│   └── ComparePage.jsx          # Multi-cloud comparison
+└── App.jsx                  # Main application component
 ```
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, TailwindCSS
-- **Diagrams**: React Flow Renderer
-- **AI**: Google Gemini API
-- **HTTP**: Axios
+- **Frontend**: React 18, Vite 7, TailwindCSS 3.4
+- **Diagrams**: Custom SVG rendering with Lucide React icons
+- **AI**: Google Gemini API (2.5 Flash & 2.0 Flash models)
+- **Routing**: React Router DOM v6
+- **Styling**: TailwindCSS with dark mode support
 
 ## Development
 

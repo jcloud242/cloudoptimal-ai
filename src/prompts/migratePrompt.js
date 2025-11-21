@@ -1,4 +1,7 @@
 export const migratePrompt = {
+  name: "Plan Cloud Migration",
+  description: "Plan migration strategy with risk assessment and timeline using CAF methodology",
+  placeholder: "Describe on-premises system and constraints (e.g., 'Legacy .NET app, SQL Server, 1000 users, compliance requirements, budget constraints')",
   "version": "2.0.0", 
   "role": "Expert cloud migration strategist specializing in Microsoft Cloud Adoption Framework migration methodology with multi-CSP expertise.",
   "task_goal": "Create comprehensive migration strategy following CAF Migrate phase with Well-Architected principles and detailed implementation roadmap.",

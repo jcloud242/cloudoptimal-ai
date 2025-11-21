@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Left Panel Redesign** - Restructured left panel to match modern design patterns
+  - Page title with icon (Sparkles/Code2) now at top of left panel
+  - Moved SessionHistory to bottom, below the prompt form
+  - Simplified PromptInput to clean form layout without card wrapper
+  - Added "PROMPT TYPE" and "REQUIREMENTS DESCRIPTION" labels with uppercase tracking
+  - Single "New Analysis" button instead of two buttons after results
+  - Removed gradients and card styling for cleaner appearance
+  - Added lucide-react icons (Sparkles, Code2, Loader2)
+
+### Fixed
+- **Mermaid Diagram Parsing** - Reverted from architecture-beta to flowchart TD syntax due to parsing errors
+- **Session Loading** - Fixed missing diagram and recommendation when loading from previous sessions
+- **Empty State Layout** - Fixed excessive whitespace on first page load, empty state now properly centered
+- **Left Panel Scrolling** - Improved scroll behavior with flex-1 and overflow-y-auto on inner container
+- **Body CSS Layout** - Removed conflicting flex/center styling from body element that prevented proper viewport usage
+
+---
+
+## [1.3.0] - 2025-11-17
+
+### Modern Dashboard UI Redesign
+
+- **Split-Panel Layout Architecture**
+  - **NEW: Resizable Split-Panel Interface** - Modern dashboard with draggable divider between left and right panels (25-60% width range)
+  - **NEW: Static Left Panel** - Left panel remains visible with independent scroll, never scrolls with right content
+  - **NEW: Scrollable Right Panel** - Right panel handles overflow independently for diagrams and detailed results
+  - **NEW: Full Viewport Usage** - Pages now use `h-screen` to fill entire viewport before and after submission
+  - Removed redundant page title header that duplicated prompt box information
+
+- **Enhanced User Flow**
+  - **NEW: Context-Aware Left Panel** - Displays prompt input before submission, recommendation card after submission
+  - **NEW: Action Buttons After Results** - "New Design" and "Iterate on Design" buttons replace prompt input after AI generation
+  - **NEW: Single Loading State** - Consolidated loading indicator in one location (prompt button only)
+  - **NEW: Recommendation Card with Provider Icons** - AWS/Azure/GCP branded cards with color-coded styling
+  - Improved user experience with clear state transitions between prompt and results
+
+- **Streamlined Results Display**
+  - **NEW: Optimized Section Order** - Resource Table → Summary → CSP Comparison Table (removed intermediate sections)
+  - **REMOVED: Duplicate Recommendation Section** - Recommendation now only appears in left panel card, not repeated under diagram
+  - **REMOVED: Migration Strategy, Tradeoffs, Optimization sections** - Simplified to core results only
+  - Enhanced visual clarity by removing redundant information
+  - Better information hierarchy with focused content presentation
+
+- **Modern Component Styling**
+  - **PromptInput**: Gradient headers (blue-to-indigo), enhanced button styling, removed Clear button
+  - **SessionHistory**: Purple/pink gradient header, modern card layout, improved button designs
+  - **DiagramView**: Blue gradient header with architecture icon, enhanced container styling
+  - **ResultDisplay**: Blue gradient header with document icon, refined table styling
+  - **RecommendationCard**: Provider-specific branding with AWS (orange), Azure (blue), GCP (multi-color) themes
+  - **ResizableDivider**: Smooth drag interaction with percentage-based constraints
+
+- **Architecture Diagram Improvements**
+  - **NEW: architecture-beta Mermaid Syntax** - Updated prompt templates to use modern architecture-beta diagram type
+  - Enhanced diagram rendering with groups and service icons for cloud services
+  - Improved diagram styling with modern cloud architecture visualization
+  - Better error handling and fallback to architecture-beta prefix
+
+### Enhanced
+- **Visual Design System**
+  - Dark mode: Deep blue-black gradients (`gray-950`, `blue-950`) with purple/blue accents
+  - Light mode: White/light grey gradients with colorful section accents
+  - Consistent gradient backgrounds throughout all components
+  - Enhanced shadows, borders, and hover states for better interactivity
+  - Professional color scheme with blue (primary), purple (sessions), provider-specific colors
+
+- **Component Architecture**
+  - Simplified prop passing between components (removed unused `onClearSession`)
+  - Better state management for recommendation display
+  - Improved loading state handling with single source of truth
+  - Enhanced conditional rendering based on AI response state
+
+### Fixed
+- **Layout Issues**
+  - Fixed left panel scrolling with right panel (now independent with `overflow-y-auto`)
+  - Fixed viewport responsiveness before prompt submission (now uses `h-screen` and `min-h-full`)
+  - Removed duplicate page title header that repeated prompt box text
+  - Fixed empty state placeholder taking insufficient space
+
+- **User Experience Problems**
+  - Fixed duplicate loading messages in prompt button and separate loading indicator
+  - Removed duplicate recommended solution display (was showing in both card and detailed results)
+  - Fixed section order confusion by reorganizing to logical flow
+  - Improved button labels and actions ("New Design" and "Iterate on Design")
+
+- **Display Inconsistencies**
+  - Removed redundant sections that cluttered the results view
+  - Fixed recommendation extraction to properly handle both single and multi-provider formats
+  - Improved recommendation card to show architecture and reasoning clearly
+  - Enhanced empty state messaging and icon sizing
+
+### Technical
+- **ResizableDivider Component** - New draggable vertical divider with mouse event handling and width constraints
+- **RecommendationCard Component** - Provider-specific recommendation display with react-icons integration
+- **Layout System** - Flexbox-based split panel with independent overflow handling
+- **State Management** - Enhanced state variables for leftWidth, recommendedProvider, and response visibility
+- **Mermaid Integration** - Updated to support architecture-beta syntax with automatic prefix detection
+- **CSS Improvements** - Gradient backgrounds, shadow systems, modern color palette throughout
+
 ---
 
 ## [1.2.0] - 2025-11-10
