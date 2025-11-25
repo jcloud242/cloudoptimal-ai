@@ -135,5 +135,27 @@ export const gcpIcons = {
       "service": "apigee",
       "tags": ["gcp", "apigee", "api", "gateway"]
     }
+  },
+  "cloudidentity": {
+    "svg": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjEwMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMzMzY3RDYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0Mjg1RjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSIyIi8+PGNpcmNsZSBjeD0iMjAiIGN5PSIxNCIgcj0iNCIgZmlsbD0iI0ZGRiIvPjxwYXRoIGQ9Ik0xMiAyOGMwLTQgNC02IDgtNnM4IDIgOCA2IiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkYiIHN0cm9rZS13aWR0aD0iMiIvPjwvc3ZnPg==",
+    "metadata": {
+      "name": "Cloud Identity",
+      "description": "Identity and Access Management",
+      "category": "Security",
+      "provider": "gcp",
+      "service": "cloudidentity",
+      "tags": ["gcp", "identity", "iam", "security"]
+    }
+  },
+  "cloudiam": {
+    "svg": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIwJSIgeTE9IjEwMCUiIHgyPSIxMDAlIiB5Mj0iMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiMzMzY3RDYiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM0Mjg1RjQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCBmaWxsPSJ1cmwoI2EpIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHJ4PSIyIi8+PHBhdGggZD0iTTIwIDEyYy0yIDAtNCAxLjUtNCAzLjV2M2MwIDIgMiAzLjUgNCAzLjVzNC0xLjUgNC0zLjV2LTNjMC0yLTItMy41LTQtMy41em0wIDEyYy00IDAtNyAyLTcgNHYyaDEzdi0yYzAtMi0zLTQtNy00eiIgZmlsbD0iI0ZGRiIvPjwvc3ZnPg==",
+    "metadata": {
+      "name": "Cloud IAM",
+      "description": "Identity and Access Management",
+      "category": "Security",
+      "provider": "gcp",
+      "service": "cloudiam",
+      "tags": ["gcp", "iam", "identity", "security"]
+    }
   }
 };

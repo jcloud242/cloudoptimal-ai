@@ -171,11 +171,54 @@ Provide your response in the following comprehensive JSON format:
     "azure_total": "Total Azure monthly cost estimate (single realistic value, e.g., '$1650' - NOT a range)",
     "gcp_total": "Total GCP monthly cost estimate (single realistic value, e.g., '$1625' - NOT a range)"
   },
+  "how_it_works": [
+    "Step 1: Brief description (e.g., 'Users access application through CloudFront CDN')",
+    "Step 2: Brief description (e.g., 'Load balancer distributes requests to application servers')",
+    "Step 3: Brief description (e.g., 'Application servers process requests and query database')",
+    "Step 4: Brief description (e.g., 'Data is cached in Redis for performance')",
+    "Step 5: Brief description (e.g., 'Monitoring tracks all operations in real-time')"
+  ],
+  "key_benefits": [
+    "**Scalability:** Auto-scales based on demand",
+    "**Cost Efficiency:** Pay only for compute time used",
+    "**Reliability:** Built-in redundancy and multi-AZ deployment",
+    "**Performance:** Global CDN distribution and caching",
+    "**Security:** End-to-end encryption and IAM controls"
+  ],
+  "waf_highlights": {
+    "security": "How the architecture addresses security (e.g., 'WAF, DDoS protection, encryption at rest and in transit')",
+    "cost_optimization": "How costs are optimized (e.g., 'Auto-scaling, serverless where applicable, right-sized instances')",
+    "operational_excellence": "How operations are streamlined (e.g., 'Automated deployments, centralized logging, infrastructure as code')",
+    "performance_efficiency": "How performance is optimized (e.g., 'CDN caching, database read replicas, optimized instance types')",
+    "reliability": "How reliability is ensured (e.g., 'Multi-AZ deployment, automated backups, health checks')"
+  },
+  "provider_rationale": "1-2 sentence explanation of why the specific provider was chosen for THIS workload (e.g., 'AWS was selected for its mature Lambda ecosystem and superior global CDN coverage, which directly addresses the serverless and worldwide distribution requirements')",
+  "next_steps": [
+    {
+      "title": "Environment Setup",
+      "description": "Configure cloud account, set up IAM roles, and establish networking foundation"
+    },
+    {
+      "title": "Infrastructure Deployment",
+      "description": "Deploy core infrastructure using Terraform or CloudFormation"
+    },
+    {
+      "title": "Application Migration",
+      "description": "Migrate application components and validate functionality"
+    },
+    {
+      "title": "Testing & Optimization",
+      "description": "Perform load testing and optimize based on real-world performance"
+    }
+  ],
 
   "architecture_diagram": {
     "CRITICAL_VALIDATION": "YOU ARE THE LEAD ARCHITECT. Read your overall_recommendation first. Extract the architecture flow described. THEN create this diagram to match exactly what you recommended. Validate each connection asks: 'Does this match my recommendation? Is this arrow direction correct?'",
+    "DIAGRAM_HOW_IT_WORKS_ALIGNMENT": "CRITICAL: Each step in how_it_works MUST have a corresponding node in the diagram. The diagram flow MUST match the how_it_works sequence. Validate: Do all how_it_works steps appear as nodes? Is the flow order correct?",
+    "ENTRY_NODE_REQUIREMENT": "The FIRST node (leftmost) MUST be one of: Client/User (for client-initiated), OR CDN/Load Balancer/API Gateway (for entry services). NO storage, database, or backend services as entry points.",
     "ENTRY_POINT_EXAMPLES": {
       "CORRECT": [
+        "User/Client → CDN → Load Balancer → Compute → Database",
         "Load Balancer (no incoming) → API Gateway → Compute",
         "CDN (no incoming) pulls from Storage (Storage doesn't connect TO CDN)",
         "API Gateway (no incoming) → Cloud Run → Database"
@@ -229,6 +272,9 @@ CRITICAL FORMATTING REQUIREMENTS - VALIDATE BEFORE RESPONDING:
 
 PRE-RESPONSE VALIDATION CHECKLIST (VERIFY ALL BEFORE SUBMITTING):
 ☐ **CRITICAL ARCHITECTURE FLOW**: Re-read your overall_recommendation. Find the sentence describing data flow (e.g., "fronted by CDN...Load Balancer distributes to..."). Does your architecture_diagram.connections match this EXACT flow? Entry points (CDN, LB, API GW) must have NO incoming solid connections.
+☐ **HOW IT WORKS ALIGNMENT**: Count your how_it_works steps. Count nodes in architecture_diagram. Each how_it_works step MUST have a corresponding node. If step mentions "Load Balancer", diagram must have load balancer node. Verify alignment.
+☐ **ENTRY NODE VALIDATION**: First node (leftmost) MUST be Client/User OR CDN/Load Balancer/API Gateway. If you have CDN as entry, it should NOT have an incoming connection from storage.
+☐ **SELF-CORRECTION**: Re-read your architecture_diagram. Does it accurately represent the solution you recommended? If not, REWRITE the diagram connections to match your recommendation before submitting.
 ☐ **CRITICAL**: Verify EVERY connection.from and connection.to value EXACTLY matches a node.id from architecture_diagram.nodes array (NO external entities like 'mobile-client', 'users', 'browser')
 ☐ **CRITICAL**: Count nodes in architecture_diagram.nodes array - does it EXACTLY match number of rows in resource_table?
 ☐ **CRITICAL DIAGRAM CONSISTENCY**: Every service mentioned in overall_recommendation MUST appear in architecture_diagram.nodes. Every node in diagram should be referenced in recommendation or resource_table.
