@@ -144,9 +144,9 @@ Provide your response in the following comprehensive JSON format:
 
 {
   "recommended_solution": {
-    "recommended_provider": "Single recommended CSP (e.g., 'AWS')",
-    "recommended_architecture": "Complete architecture description (e.g., 'Microservices-based e-commerce platform deployed on AWS, leveraging containerized applications and serverless functions')",
-    "justification": "Clear reasoning why this provider and architecture best meets the requirements"
+    "recommended_provider": "Single recommended CSP (e.g., 'AWS', 'Azure', 'GCP')",
+    "recommended_architecture": "CRITICAL: SHORT single-line architecture pattern/design description ONLY (e.g., 'Globally distributed serverless container architecture', 'Event-driven microservices platform', 'Multi-region container orchestration'). MAX 80 characters. DO NOT list components here.",
+    "justification": "CONCISE 2-3 sentence rationale explaining why this provider and pattern fit the requirements. Keep under 200 words. Focus on key strengths, NOT implementation details."
   },
   "resource_table": [
     {
@@ -157,7 +157,7 @@ Provide your response in the following comprehensive JSON format:
       "cost_monthly_est": "Monthly cost estimate (e.g., '$240', '$450')"
     }
   ],
-  "summary": "Executive summary explaining how the recommended solution addresses the specific business requirements and why it's the optimal choice",
+  "summary": "DETAILED executive summary (3-5 paragraphs) explaining: 1) How the architecture addresses business requirements, 2) Why it's optimal, 3) Key technical decisions. DO NOT include 'Next Steps' - that's a separate section.",
   "csp_comparison_table": [
     {
       "component": "Component type (e.g., 'Compute', 'Load Balancer', 'Container', 'Database', 'CDN')",
@@ -215,24 +215,27 @@ Provide your response in the following comprehensive JSON format:
   "architecture_diagram": {
     "CRITICAL_VALIDATION": "YOU ARE THE LEAD ARCHITECT. Read your overall_recommendation first. Extract the architecture flow described. THEN create this diagram to match exactly what you recommended. Validate each connection asks: 'Does this match my recommendation? Is this arrow direction correct?'",
     "DIAGRAM_HOW_IT_WORKS_ALIGNMENT": "CRITICAL: Each step in how_it_works MUST have a corresponding node in the diagram. The diagram flow MUST match the how_it_works sequence. Validate: Do all how_it_works steps appear as nodes? Is the flow order correct?",
-    "ENTRY_NODE_REQUIREMENT": "The FIRST node (leftmost) MUST be one of: Client/User (for client-initiated), OR CDN/Load Balancer/API Gateway (for entry services). NO storage, database, or backend services as entry points.",
+    "MANDATORY_CLIENT_ENTRY_NODE": "CRITICAL: EVERY diagram MUST include a Client/User node as the absolute first entry point. This represents mobile clients, web browsers, or API consumers. Example: how_it_works Step 1 says 'Mobile clients connect to Load Balancer' - diagram MUST show: Client/User → Load Balancer. The client node should use icon 'Smartphone' or 'Users' and be in the 'presentation' layer.",
+    "ENTRY_NODE_REQUIREMENT": "After the mandatory Client/User node, the SECOND node should be one of: CDN/Load Balancer/API Gateway (entry services). Flow: Client → [CDN/LB/API Gateway] → Backend Services. NO storage, database, or backend services as second nodes.",
     "ENTRY_POINT_EXAMPLES": {
       "CORRECT": [
-        "User/Client → CDN → Load Balancer → Compute → Database",
-        "Load Balancer (no incoming) → API Gateway → Compute",
-        "CDN (no incoming) pulls from Storage (Storage doesn't connect TO CDN)",
-        "API Gateway (no incoming) → Cloud Run → Database"
+        "Client/User → CDN → Load Balancer → Compute → Database",
+        "Client/User → Load Balancer → API Gateway → Compute",
+        "Client/User → API Gateway → Cloud Run → Database",
+        "Mobile Client → External Load Balancer → Cloud Run → Firestore"
       ],
       "WRONG_DO_NOT_DO": [
-        "Storage → CDN (WRONG: Storage is not entry point, CDN pulls from it)",
-        "Database → Compute (WRONG: Data doesn't flow FROM database TO compute as entry)",
-        "CDN → Load Balancer (WRONG: These are parallel entries, not sequential)"
+        "Load Balancer → ... (WRONG: Missing Client/User as first node)",
+        "CDN → Storage (WRONG: No Client shown, and CDN should not connect TO storage)",
+        "Database → Compute (WRONG: No Client, and wrong flow direction)",
+        "API Gateway → ... (WRONG: Missing Client/User node before API Gateway)"
       ]
     },
     "FLOW_VALIDATION_CHECKLIST": [
-      "Step 1: Identify entry points from YOUR recommendation (typically: CDN, Load Balancer, API Gateway)",
-      "Step 2: Entry points have ZERO incoming solid connections (they receive from external users/internet)",
-      "Step 3: Trace YOUR recommended flow: Entry → Compute → Data",
+      "Step 0: MANDATORY - First node is Client/User/Mobile Client with Smartphone or Users icon",
+      "Step 1: Second node is entry service from YOUR recommendation (CDN, Load Balancer, API Gateway)",
+      "Step 2: Entry services have ONLY one incoming connection (from Client node)",
+      "Step 3: Trace YOUR recommended flow: Client → Entry → Compute → Data",
       "Step 4: For CDN: Either show no connection to storage, OR if showing origin, it's Storage→CDN (CDN pulls)",
       "Step 5: Monitoring/Logging connect TO (point at) what they observe",
       "Step 6: Re-read overall_recommendation. Does diagram match the flow you described? Fix if not."
@@ -241,14 +244,26 @@ Provide your response in the following comprehensive JSON format:
     "provider": "Recommended provider from recommended_solution (aws, azure, or gcp)",
     "nodes": [
       {
-        "id": "unique-node-id (e.g., 'cdn', 'lb', 'web-tier')",
-        "label": "IMPORTANT: Use the EXACT resource name from resource_table where possible (e.g., if table says 'Compute Engine', use 'Compute Engine' not 'Game Servers'). Keep under 15 chars. Use official service names, not custom descriptions.",
-        "layer": "One of: networking, presentation, application, data, security, or operations. Use 'networking' for CDN, load balancers, API gateways; 'presentation' for web servers, frontends; 'application' for app servers, microservices; 'data' for databases, storage; 'security' for IAM, firewalls; 'operations' for monitoring, logging.",
-        "type": "Service type (e.g., 'networking', 'compute', 'database', 'storage', 'cache', 'monitoring')",
-        "service": "Provider-specific service name for icon lookup (e.g., 'cloudfront', 's3', 'lambda', 'ec2', 'rds', 'dynamodb', 'blob', 'functions', 'virtualmachines', 'cloudstorage', 'computeengine', 'cloudfunctions'). Use lowercase, no spaces. This enables automatic provider-specific icon display.",
-        "icon": "Lucide icon name as fallback (e.g., 'Globe', 'Network', 'Server', 'Database', 'HardDrive', 'Shield', 'Zap', 'Cpu')",
-        "description": "Detailed description for tooltip (e.g., 'Content Delivery Network for global distribution')",
-        "cost": "Monthly cost from resource_table (e.g., '$50')"
+        "FIRST_NODE_EXAMPLE": {
+          "id": "client",
+          "label": "Mobile Client",
+          "layer": "presentation",
+          "type": "client",
+          "service": "client",
+          "icon": "Smartphone",
+          "description": "Mobile app users accessing the system",
+          "cost": "$0"
+        }
+      },
+      {
+        "id": "unique-node-id (e.g., 'client', 'cdn', 'lb', 'web-tier')",
+        "label": "IMPORTANT: Use the EXACT resource name from resource_table where possible (e.g., if table says 'Compute Engine', use 'Compute Engine' not 'Game Servers'). For client node use 'Mobile Client', 'Web Client', or 'API Client'. Keep under 15 chars. Use official service names, not custom descriptions.",
+        "layer": "One of: networking, presentation, application, data, security, or operations. Client node should be 'presentation'. Use 'networking' for CDN, load balancers, API gateways; 'presentation' for web servers, frontends, clients; 'application' for app servers, microservices; 'data' for databases, storage; 'security' for IAM, firewalls; 'operations' for monitoring, logging.",
+        "type": "Service type (e.g., 'client', 'networking', 'compute', 'database', 'storage', 'cache', 'monitoring')",
+        "service": "Provider-specific service name for icon lookup OR 'client' for client node (e.g., 'client', 'cloudfront', 's3', 'lambda', 'ec2', 'rds', 'dynamodb', 'blob', 'functions', 'virtualmachines', 'cloudstorage', 'computeengine', 'cloudfunctions'). Use lowercase, no spaces. This enables automatic provider-specific icon display.",
+        "icon": "Lucide icon name as fallback (e.g., 'Smartphone' for mobile, 'Users' for web clients, 'Globe', 'Network', 'Server', 'Database', 'HardDrive', 'Shield', 'Zap', 'Cpu')",
+        "description": "Detailed description for tooltip (e.g., 'Mobile clients accessing the game', 'Content Delivery Network for global distribution')",
+        "cost": "Monthly cost from resource_table (e.g., '$0' for client, '$50' for services)"
       }
     ],
     "connections": [
@@ -271,9 +286,10 @@ CRITICAL FORMATTING REQUIREMENTS - VALIDATE BEFORE RESPONDING:
 3. Include ALL required sections: recommended_solution, resource_table, csp_comparison_table, tradeoffs_analysis, summary, architecture_diagram
 
 PRE-RESPONSE VALIDATION CHECKLIST (VERIFY ALL BEFORE SUBMITTING):
-☐ **CRITICAL ARCHITECTURE FLOW**: Re-read your overall_recommendation. Find the sentence describing data flow (e.g., "fronted by CDN...Load Balancer distributes to..."). Does your architecture_diagram.connections match this EXACT flow? Entry points (CDN, LB, API GW) must have NO incoming solid connections.
-☐ **HOW IT WORKS ALIGNMENT**: Count your how_it_works steps. Count nodes in architecture_diagram. Each how_it_works step MUST have a corresponding node. If step mentions "Load Balancer", diagram must have load balancer node. Verify alignment.
-☐ **ENTRY NODE VALIDATION**: First node (leftmost) MUST be Client/User OR CDN/Load Balancer/API Gateway. If you have CDN as entry, it should NOT have an incoming connection from storage.
+☐ **MANDATORY CLIENT NODE**: First node in architecture_diagram.nodes MUST be a Client/User node with id like 'client' or 'mobile-client', label like 'Mobile Client' or 'Web Client', icon 'Smartphone' or 'Users', and cost '$0'. This is NON-NEGOTIABLE.
+☐ **CRITICAL ARCHITECTURE FLOW**: Re-read your overall_recommendation. Find the sentence describing data flow (e.g., "Mobile clients connect to Load Balancer..."). Does your architecture_diagram.connections match this EXACT flow starting with Client node? First connection MUST be from client node to entry service.
+☐ **HOW IT WORKS ALIGNMENT**: Count your how_it_works steps. Count nodes in architecture_diagram (including client node). Each how_it_works step MUST have a corresponding node. If step 1 says "Mobile clients connect to...", diagram must show Client node connecting to that service.
+☐ **ENTRY NODE VALIDATION**: First node MUST be Client/User. Second node must be entry service (CDN/Load Balancer/API Gateway) mentioned in how_it_works step 1. Client connects TO entry service, not the other way around.
 ☐ **SELF-CORRECTION**: Re-read your architecture_diagram. Does it accurately represent the solution you recommended? If not, REWRITE the diagram connections to match your recommendation before submitting.
 ☐ **CRITICAL**: Verify EVERY connection.from and connection.to value EXACTLY matches a node.id from architecture_diagram.nodes array (NO external entities like 'mobile-client', 'users', 'browser')
 ☐ **CRITICAL**: Count nodes in architecture_diagram.nodes array - does it EXACTLY match number of rows in resource_table?

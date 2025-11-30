@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cloud, Zap, Shield, DollarSign, Gauge, Cog, ChevronDown, ChevronUp } from 'lucide-react';
+import { Cloud, Zap, Shield, DollarSign, Gauge, Cog } from 'lucide-react';
 import DiagramView from './DiagramView';
 
 // Function to parse markdown-style formatting
@@ -21,7 +21,6 @@ function parseMarkdownText(text) {
 
 export default function ComprehensiveResults({ aiResponse, diagramData, recommendedProvider }) {
   const [howItWorksExpanded, setHowItWorksExpanded] = useState(false);
-  const [benefitsExpanded, setBenefitsExpanded] = useState(false);
 
   if (!aiResponse) return null;
 
@@ -80,7 +79,7 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                 {recommendedProvider.provider} - {recommendedProvider.architecture}
               </h2>
             </div>
-            <p className="text-gray-700 dark:text-slate-300 text-lg max-w-3xl">
+            <p className="text-gray-700 dark:text-slate-300 text-lg max-w-full leading-relaxed">
               {recommendedProvider.reasoning}
             </p>
           </div>
@@ -88,64 +87,52 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
       )}
 
       <main className="max-w-7xl mx-auto px-6 py-12 space-y-12">
-        {/* How It Works & Key Benefits */}
+        {/* How It Works & Key Benefits - Combined Single Card */}
         {(howItWorks.length > 0 || keyBenefits.length > 0) && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-transparent">
-            {/* How It Works */}
-            {howItWorks.length > 0 && (
-              <div className="bg-white/80 dark:bg-slate-800/50 rounded-xl p-6 border-0 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">How It Works</h3>
-                <ul className="space-y-3 text-gray-700 dark:text-slate-300">
-                  {howItWorks.slice(0, howItWorksExpanded ? undefined : 3).map((step, index) => (
-                    <li key={index} className="flex gap-3 items-start">
-                      <span className="flex-shrink-0 w-7 h-7 bg-blue-500 dark:bg-blue-600 text-white rounded-full text-sm font-semibold flex items-center justify-center">
-                        {index + 1}
-                      </span>
-                      <span className="flex-1">{typeof step === 'string' ? step : step.description || step.step}</span>
-                    </li>
-                  ))}
-                </ul>
-                {howItWorks.length > 3 && (
-                  <button
-                    onClick={() => setHowItWorksExpanded(!howItWorksExpanded)}
-                    className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm flex items-center gap-1"
-                  >
-                    {howItWorksExpanded ? (
-                      <>Show Less <ChevronUp className="w-4 h-4" /></>
-                    ) : (
-                      <>Show More <ChevronDown className="w-4 h-4" /></>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
+          <div className="bg-white/80 dark:bg-slate-800/50 rounded-xl p-8 border-0 shadow-sm">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* How It Works - Left Side */}
+              {howItWorks.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">How It Works</h3>
+                  <ul className="space-y-3 text-gray-700 dark:text-slate-300">
+                    {howItWorks.slice(0, howItWorksExpanded ? undefined : 5).map((step, index) => (
+                      <li key={index} className="flex gap-3 items-start">
+                        <span className="flex-shrink-0 w-7 h-7 bg-blue-500 dark:bg-blue-600 text-white rounded-full text-sm font-semibold flex items-center justify-center">
+                          {index + 1}
+                        </span>
+                        <span className="flex-1">{typeof step === 'string' ? step : step.description || step.step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-            {/* Key Benefits */}
-            {keyBenefits.length > 0 && (
-              <div className="bg-white/80 dark:bg-slate-800/50 rounded-xl p-6 border-0 shadow-sm">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">Key Benefits</h3>
-                <ul className="space-y-3 text-gray-700 dark:text-slate-300">
-                  {keyBenefits.slice(0, benefitsExpanded ? undefined : 3).map((benefit, index) => (
-                    <li key={index} className="flex gap-3 items-start">
-                      <span className="text-cyan-500 dark:text-cyan-400 flex-shrink-0 text-lg">✓</span>
-                      <span className="flex-1">{typeof benefit === 'string' ? parseMarkdownText(benefit) : benefit.description || benefit.benefit}</span>
-                    </li>
-                  ))}
-                </ul>
-                {keyBenefits.length > 3 && (
-                  <button
-                    onClick={() => setBenefitsExpanded(!benefitsExpanded)}
-                    className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm flex items-center gap-1"
-                  >
-                    {benefitsExpanded ? (
-                      <>Show Less <ChevronUp className="w-4 h-4" /></>
-                    ) : (
-                      <>Show More <ChevronDown className="w-4 h-4" /></>
-                    )}
-                  </button>
-                )}
-              </div>
-            )}
+              {/* Key Benefits - Right Side */}
+              {keyBenefits.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">Key Benefits</h3>
+                  <ul className="space-y-3 text-gray-700 dark:text-slate-300">
+                    {keyBenefits.slice(0, 5).map((benefit, index) => (
+                      <li key={index} className="flex gap-3 items-start">
+                        <span className="text-cyan-500 dark:text-cyan-400 flex-shrink-0 text-lg">✓</span>
+                        <span className="flex-1">{typeof benefit === 'string' ? parseMarkdownText(benefit) : benefit.description || benefit.benefit}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {howItWorks.length > 5 && (
+                    <div className="mt-4 text-right">
+                      <span
+                        onClick={() => setHowItWorksExpanded(!howItWorksExpanded)}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-sm cursor-pointer"
+                      >
+                        {howItWorksExpanded ? '...See Less' : '...See More'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
