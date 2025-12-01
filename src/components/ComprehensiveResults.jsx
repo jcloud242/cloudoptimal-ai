@@ -92,6 +92,18 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
       )}
 
       <main className="max-w-7xl mx-auto px-6 py-12 space-y-12">
+        {/* Provider Rationale - Why this provider? */}
+        {providerRationale && recommendedProvider && (
+          <div className="p-5 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-r-lg">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-lg mb-2">
+              Why {recommendedProvider.provider}?
+            </h4>
+            <p className="text-blue-800 dark:text-blue-200 leading-relaxed">
+              {providerRationale}
+            </p>
+          </div>
+        )}
+
         {/* How It Works & Key Benefits - Combined Single Card */}
         {(howItWorks.length > 0 || keyBenefits.length > 0) && (
           <div className="bg-white/80 dark:bg-slate-800/50 rounded-xl p-8 border-0 shadow-sm">
@@ -196,32 +208,6 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Summary */}
-        {(parsedData?.overall_recommendation || parsedData?.overall_summary || parsedData?.summary) && (
-          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden">
-            <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-blue-900/30 border-b border-gray-200 dark:border-slate-700">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Solution Summary</h3>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="text-gray-700 dark:text-gray-200 leading-relaxed">
-                {parseMarkdownText(parsedData.overall_recommendation || parsedData.overall_summary || parsedData.summary)}
-              </div>
-              
-              {/* Provider Rationale */}
-              {providerRationale && recommendedProvider && (
-                <div className="mt-6 p-5 bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-400 rounded-r-lg">
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-lg mb-2">
-                    Why {recommendedProvider.provider}?
-                  </h4>
-                  <p className="text-blue-800 dark:text-blue-200 leading-relaxed">
-                    {providerRationale}
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         )}
