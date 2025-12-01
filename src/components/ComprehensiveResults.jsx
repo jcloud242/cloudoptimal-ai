@@ -21,6 +21,11 @@ function parseMarkdownText(text) {
 
 export default function ComprehensiveResults({ aiResponse, diagramData, recommendedProvider }) {
   const [howItWorksExpanded, setHowItWorksExpanded] = useState(false);
+  const [wafExpanded, setWafExpanded] = useState({});
+
+  const toggleWafExpanded = (key) => {
+    setWafExpanded(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   if (!aiResponse) return null;
 
@@ -96,7 +101,7 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">How It Works</h3>
                   <ul className="space-y-3 text-gray-700 dark:text-slate-300">
-                    {howItWorks.slice(0, howItWorksExpanded ? undefined : 5).map((step, index) => (
+                    {howItWorks.slice(0, howItWorksExpanded ? undefined : 3).map((step, index) => (
                       <li key={index} className="flex gap-3 items-start">
                         <span className="flex-shrink-0 w-7 h-7 bg-blue-500 dark:bg-blue-600 text-white rounded-full text-sm font-semibold flex items-center justify-center">
                           {index + 1}
@@ -113,14 +118,14 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-4">Key Benefits</h3>
                   <ul className="space-y-3 text-gray-700 dark:text-slate-300">
-                    {keyBenefits.slice(0, 5).map((benefit, index) => (
+                    {keyBenefits.slice(0, howItWorksExpanded ? undefined : 3).map((benefit, index) => (
                       <li key={index} className="flex gap-3 items-start">
                         <span className="text-cyan-500 dark:text-cyan-400 flex-shrink-0 text-lg">✓</span>
                         <span className="flex-1">{typeof benefit === 'string' ? parseMarkdownText(benefit) : benefit.description || benefit.benefit}</span>
                       </li>
                     ))}
                   </ul>
-                  {howItWorks.length > 5 && (
+                  {(howItWorks.length > 3 || keyBenefits.length > 3) && (
                     <div className="mt-4 text-right">
                       <span
                         onClick={() => setHowItWorksExpanded(!howItWorksExpanded)}
@@ -229,18 +234,38 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
               {Object.entries(validWafHighlights).map(([key, value]) => {
                 const pillarConfig = wafPillars[key];
                 const Icon = pillarConfig.icon;
+                const contentText = typeof value === 'string' ? value : value.summary || value.description || '';
+                const isExpanded = wafExpanded[key];
+                const charLimit = 80;
+                const needsTruncation = contentText.length > charLimit;
+                const displayText = needsTruncation && !isExpanded 
+                  ? contentText.substring(0, charLimit) + '...' 
+                  : contentText;
+                
                 return (
                   <div
                     key={key}
-                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:border-blue-400 dark:hover:border-slate-600 transition-colors shadow-sm"
+                    className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 hover:border-blue-400 dark:hover:border-slate-600 transition-colors shadow-sm flex flex-col min-h-[180px]"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <Icon className={`w-5 h-5 text-${pillarConfig.color}-500 dark:text-${pillarConfig.color}-400`} />
                       <h3 className="font-semibold text-gray-900 dark:text-slate-100">{pillarConfig.label}</h3>
                     </div>
-                    <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
-                      {typeof value === 'string' ? value : value.summary || value.description || ''}
-                    </p>
+                    <div className="flex-1">
+                      <p className="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+                        {displayText}
+                      </p>
+                    </div>
+                    {needsTruncation && (
+                      <div className="mt-2">
+                        <span
+                          onClick={() => toggleWafExpanded(key)}
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium text-xs cursor-pointer"
+                        >
+                          {isExpanded ? 'See Less' : 'See More'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 );
               })}

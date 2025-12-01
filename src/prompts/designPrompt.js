@@ -157,7 +157,7 @@ Provide your response in the following comprehensive JSON format:
       "cost_monthly_est": "Monthly cost estimate (e.g., '$240', '$450')"
     }
   ],
-  "summary": "DETAILED executive summary (3-5 paragraphs) explaining: 1) How the architecture addresses business requirements, 2) Why it's optimal, 3) Key technical decisions. DO NOT include 'Next Steps' - that's a separate section.",
+  "summary": "DETAILED executive summary (3-5 paragraphs) explaining: 1) How the architecture addresses business requirements, 2) Why it's optimal, 3) Key technical decisions. CRITICAL: DO NOT mention 'Next Steps', 'Implementation Steps', or 'Getting Started' here - those are in the next_steps field. This summary should ONLY explain the architecture design and decisions, NOT implementation.",
   "csp_comparison_table": [
     {
       "component": "Component type (e.g., 'Compute', 'Load Balancer', 'Container', 'Database', 'CDN')",

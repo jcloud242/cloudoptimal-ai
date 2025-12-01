@@ -130,6 +130,7 @@ export default function PromptPage({ promptType, template }) {
 
             // Update the AI response with the fixed JSON for display
             setAIResponse(JSON.stringify(extracted, null, 2));
+            parsedData = extracted; // Set parsedData for session saving
           } catch (extractError) {
             console.log(
               "❌ Could not extract valid JSON from response:",
@@ -141,13 +142,28 @@ export default function PromptPage({ promptType, template }) {
         }
       }
 
-      // Save session
+      // Save session with all data needed for restoration
+      // Use parsedData which now contains either the original parse or the extracted/fixed JSON
       const sessionData = {
         promptType,
         userInput,
         aiResponse: response,
         nodes: nodes,
         edges: edges,
+        diagramData: parsedData?.architecture_diagram || null,
+        recommendedProvider: parsedData?.recommended_solution ? {
+          provider:
+            parsedData.recommended_solution.recommended_provider ||
+            parsedData.recommended_solution.primary_provider ||
+            "Cloud Provider",
+          architecture:
+            parsedData.recommended_solution.recommended_architecture ||
+            parsedData.recommended_solution.multi_cloud_strategy ||
+            "Recommended Solution",
+          reasoning:
+            parsedData.recommended_solution.justification ||
+            "AI-recommended solution",
+        } : null,
       };
 
       const sessionId = saveSession(sessionData);
@@ -167,33 +183,41 @@ export default function PromptPage({ promptType, template }) {
     setCurrentSession(session);
     setError("");
 
-    // Parse the response to extract recommendation and mermaid code
-    try {
-      const parsedData = JSON.parse(session.aiResponse);
+    // Restore saved diagramData and recommendedProvider directly from session
+    // This avoids re-parsing and ensures we get exactly what was saved
+    if (session.diagramData) {
+      setDiagramData(session.diagramData);
+    } else {
+      setDiagramData(null);
+    }
 
-      // Extract recommended solution
-      if (parsedData.recommended_solution) {
-        setRecommendedProvider({
-          provider:
-            parsedData.recommended_solution.recommended_provider ||
-            parsedData.recommended_solution.primary_provider ||
-            "Cloud Provider",
-          architecture:
-            parsedData.recommended_solution.recommended_architecture ||
-            parsedData.recommended_solution.multi_cloud_strategy ||
-            "Recommended Solution",
-          reasoning:
-            parsedData.recommended_solution.justification ||
-            "AI-recommended solution",
-        });
+    if (session.recommendedProvider) {
+      setRecommendedProvider(session.recommendedProvider);
+    } else {
+      // Fallback: try to parse from aiResponse for older sessions
+      try {
+        const parsedData = JSON.parse(session.aiResponse);
+        if (parsedData.recommended_solution) {
+          setRecommendedProvider({
+            provider:
+              parsedData.recommended_solution.recommended_provider ||
+              parsedData.recommended_solution.primary_provider ||
+              "Cloud Provider",
+            architecture:
+              parsedData.recommended_solution.recommended_architecture ||
+              parsedData.recommended_solution.multi_cloud_strategy ||
+              "Recommended Solution",
+            reasoning:
+              parsedData.recommended_solution.justification ||
+              "AI-recommended solution",
+          });
+        }
+        if (parsedData.architecture_diagram) {
+          setDiagramData(parsedData.architecture_diagram);
+        }
+      } catch (parseError) {
+        console.log("Could not parse session data:", parseError);
       }
-
-      // Extract architecture diagram (JSON format)
-      if (parsedData.architecture_diagram) {
-        setDiagramData(parsedData.architecture_diagram);
-      }
-    } catch (parseError) {
-      console.log("Could not parse session data:", parseError);
     }
   };
 
