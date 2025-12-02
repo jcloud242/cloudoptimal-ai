@@ -1,79 +1,143 @@
-# Custom SVG Diagram System - Implementation Guide
+# React Flow Diagram System - Implementation Guide
 
 ## Overview
-We've transitioned from Mermaid-based diagrams to a custom JSON-driven SVG diagram system for better control, reliability, and interactivity.
 
-## What's Been Created
+CloudOptimal AI uses **React Flow with ELK.js** for interactive, professional architecture diagrams. This replaced the previous Mermaid-based system for better control, reliability, and interactivity.
 
-### 1. Schema Definition (`src/schemas/diagramSchema.js`)
-- ✅ Defines DiagramNode, DiagramConnection, and ArchitectureDiagram types
-- ✅ Includes validation functions
-- ✅ Provides example diagram
+## Current Architecture (December 2025)
 
-### 2. Diagram Component (`src/components/ArchitectureDiagram.jsx`)
-- ✅ Custom SVG rendering with layered layout
-- ✅ Zoom and pan controls
-- ✅ Interactive tooltips on hover
-- ✅ Provider-specific theming (AWS, Azure, GCP)
-- ✅ Automatic node positioning by layer
+### Technology Stack
 
-### 3. Updated Prompts (`src/prompts/designPrompt.js`)
-- ✅ Changed architecture_diagram from Mermaid string to JSON object
-- ✅ AI now generates structured data instead of code syntax
+- **React Flow 11.11.4**: Interactive node-based diagram rendering
+- **ELK.js 0.11.0**: Advanced graph layout algorithm (replaced Dagre in Dec 2025)
+- **Lucide React**: Icon library for cloud service icons
+- **Custom Icon Registry**: Provider-specific SVG icons (AWS, Azure, GCP)
 
-### 4. New DiagramView (`src/components/DiagramView_NEW.jsx`)
-- ✅ Simplified component that renders ArchitectureDiagram
-- ✅ Handles legacy Mermaid format with warning message
+### Key Components
 
-## What Needs To Be Integrated
+1. **ArchitectureDiagram.jsx** - Main diagram renderer
+   - React Flow integration with custom nodes
+   - ELK.js async layout calculation
+   - Multi-directional handle positions (top/bottom/left/right)
+   - Theme-aware rendering (light/dark mode)
+   - Intelligent utility node placement
 
-### Step 1: Replace DiagramView.jsx
-```bash
-mv src/components/DiagramView.jsx src/components/DiagramView_OLD.jsx
-mv src/components/DiagramView_NEW.jsx src/components/DiagramView.jsx
+2. **DiagramView.jsx** - Diagram container wrapper
+   - Fullscreen capability
+   - JSON source viewer
+   - Responsive sizing
+
+3. **Icon Registry** - Provider-specific icons
+   - AWS, Azure, GCP service icons
+   - Base64-encoded SVG storage
+   - Fallback to Lucide icons
+
+---
+
+## ✅ What's Been Implemented
+
+### 1. ELK.js Layout Engine (Dec 2025)
+
+**Replaced Dagre with ELK for:**
+- ✅ Active maintenance (vs abandoned Dagre)
+- ✅ Superior edge routing algorithms
+- ✅ Multi-directional handle support
+- ✅ Intelligent utility node placement
+- ✅ Orthogonal edge routing
+- ✅ Better crossing minimization
+
+**Configuration:**
+```javascript
+layoutOptions: {
+  'elk.algorithm': 'layered',
+  'elk.direction': 'RIGHT',
+  'elk.edgeRouting': 'ORTHOGONAL',
+  'elk.portConstraints': 'FREE',
+  // ... more options
+}
 ```
 
-### Step 2: Update PromptPage.jsx
+### 2. Multi-Directional Handles
 
-**Change state variable:**
+Nodes support connections from all sides:
 ```javascript
-// OLD:
-const [mermaidCode, setMermaidCode] = useState("");
-
-// NEW:
-const [diagramData, setDiagramData] = useState(null);
+handlePositions: {
+  top: true,
+  bottom: true,
+  left: true,
+  right: true,
+}
 ```
 
-**Update all references:**
+Benefits:
+- Cleaner edge routing
+- Reduced crossing
+- Professional appearance
+- Optimal port selection
+
+### 3. Smart Utility Node Placement
+
+**Problem Solved:**
+- Monitoring, logging, IAM nodes were positioned far from targets
+- Edge crossings from long-distance connections
+
+**Solution:**
+- Utility nodes positioned ABOVE and CENTERED relative to targets
+- Calculated based on average X position of connected nodes
+- Positioned 160px above minimum Y of targets
+
+**Example:**
 ```javascript
-// In handleSubmit, replace:
-setMermaidCode("");
-// With:
-setDiagramData(null);
+const avgX = targetPositions.reduce((sum, p) => sum + p.x, 0) / targetPositions.length;
+const minTargetY = Math.min(...targetPositions.map(p => p.y));
 
-// In AI response parsing (lines ~76, ~127, ~194), replace:
-setMermaidCode(parsedData.architecture_diagram);
-// With:
-setDiagramData(parsedData.architecture_diagram);
+return {
+  x: avgX,              // Centered
+  y: minTargetY - 160,  // Above
+};
+```
 
-// In clear/reset handlers (line ~305), replace:
-setMermaidCode("");
-// With:
-setDiagramData(null);
+### 4. Theme Integration
 
-// In DiagramView component call (line ~322-327), replace:
-<DiagramView
-  nodes={nodes}
-  edges={edges}
-  mermaidCode={mermaidCode}
+Diagrams respect application theme:
+```javascript
+const { isDark } = useTheme();
+
+<ReactFlow
+  colorMode={isDark ? 'dark' : 'light'}
+  // ... other props
 />
-// With:
-<DiagramView diagramData={diagramData} />
 ```
 
-### Step 3: Update multiProviderPrompt.js
+### 5. Async Layout Loading
 
-Replace the architecture_diagram field with the same JSON structure used in designPrompt.js:
+```javascript
+const [layoutComplete, setLayoutComplete] = React.useState(false);
+
+React.useEffect(() => {
+  const applyLayout = async () => {
+    setLayoutComplete(false);
+    const { nodes, edges } = await getLayoutedElements(initialNodes, initialEdges);
+    setNodes(nodes);
+    setEdges(edges);
+    setLayoutComplete(true);
+  };
+  applyLayout();
+}, [initialNodes, initialEdges]);
+```
+
+Shows loading state during calculation:
+```javascript
+{!layoutComplete && (
+  <div>Generating diagram layout...</div>
+)}
+```
+
+---
+
+## JSON Structure
+
+### Diagram Data Format
 
 ```javascript
 "architecture_diagram": {

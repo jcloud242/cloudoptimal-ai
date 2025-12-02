@@ -8,6 +8,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **BREAKING: Migrated from Dagre to ELK.js** - Replaced abandoned Dagre layout engine with actively maintained ELK.js
+  - Superior layered algorithm with orthogonal edge routing
+  - Multi-directional handle positions (top/bottom/left/right) for cleaner connections
+  - Intelligent utility node placement near connected nodes
+  - Better handling of complex layouts and edge crossings
+  - Reduced visual clutter with optimized node positioning
+  - Package changes: Added `elkjs@0.11.0`, removed `dagre@0.8.5` and `@types/dagre@0.7.53`
+
+- **Removed Redundant Summary Section** - Streamlined results display by eliminating duplicate content
+  - Summary section was repeating WAF content and next steps
+  - Moved "Why [Provider]?" callout to appear after recommendation header
+  - Cleaner information hierarchy with focused content
+  - Better user experience with less scrolling and redundancy
+
+- **UI/UX Polish and Refinements**
+  - Fixed light mode color issues in index.css (removed dark color defaults)
+  - Reduced "How It Works" initial display from 5 to 3 steps for balanced layout
+  - Limited "Key Benefits" to 3 items initially to match "How It Works"
+  - Added character limits to WAF boxes (80 chars) with See More/Less expansion
+  - WAF boxes maintain square shape with `min-h-[180px]` for visual consistency
+
+- **React Flow Theme Integration** - Diagram now respects application theme toggle
+  - Added `colorMode` prop to ReactFlow component
+  - Automatically switches between light/dark mode based on ThemeContext
+  - Consistent visual experience across all components
+
+### Fixed
+- **Session Loading Restoration** - Previously saved sessions now fully restore diagram and recommendation
+  - Fixed session save to include `diagramData` and `recommendedProvider` objects
+  - Proper handling of parsed vs extracted JSON data
+  - Sessions now restore complete state without requiring new AI calls
+  - Enables iterative design workflows and UI testing without API costs
+
+- **AI Prompt Improvements** - Strengthened validation to prevent content duplication
+  - Enhanced summary field instructions to exclude next steps
+  - Added CRITICAL warnings against including implementation steps in summary
+  - Updated recommended_architecture to max 80 characters
+  - Justification limited to 2-3 sentences under 200 words
+  - Updated connection guidelines for utility node placement
+
+- **Diagram Layout Issues**
+  - Utility nodes (monitoring, logging, IAM) now positioned near their targets
+  - Fixed edge crossings with multi-directional handle support
+  - Improved visual clarity with centered utility placement above connected nodes
+  - Added loading state during async ELK layout calculation
+
+### Enhanced
+- **ArchitectureDiagram Component** - Complete rewrite with ELK.js integration
+  - Custom node component with 4-directional handles (top/bottom/left/right)
+  - Async layout calculation with proper loading states
+  - Intelligent node classification (main flow vs utility nodes)
+  - Utility nodes positioned above and centered relative to targets
+  - Theme-aware rendering with `useTheme()` hook
+  - Better error handling with fallback positioning
+
+- **ComprehensiveResults Component** - Multiple improvements for better UX
+  - Removed summary section entirely for cleaner flow
+  - Provider rationale callout moved to top (after header, before How It Works)
+  - Balanced two-column layout with matching item counts
+  - WAF boxes with expandable content and uniform heights
+  - See More/Less functionality for both How It Works and WAF content
+
+### Technical
+- **Dependency Updates**
+  - Added: `elkjs@0.11.0` - Modern graph layout library
+  - Removed: `dagre@0.8.5`, `@types/dagre@0.7.53` - Abandoned since 2017
+  - ELK.js provides better performance and active maintenance
+
+- **Layout Algorithm**
+  - ELK layered algorithm with configurable spacing and direction
+  - Node classification system (main flow vs utility nodes)
+  - Target-aware positioning for utility nodes
+  - Orthogonal edge routing for professional appearance
+  - Free port constraints for optimal handle selection
+
+- **State Management**
+  - Added `wafExpanded` state object for individual WAF box expansion
+  - Unified `howItWorksExpanded` controls both How It Works and Key Benefits
+  - Proper session data persistence with complete JSON structure
+  - Theme state integration via React Context
+
+---
+
+## [1.3.1] - 2025-12-01
+
+### Changed
 - **Left Panel Redesign** - Restructured left panel to match modern design patterns
   - Page title with icon (Sparkles/Code2) now at top of left panel
   - Moved SessionHistory to bottom, below the prompt form

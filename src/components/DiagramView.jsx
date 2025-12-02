@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import ArchitectureDiagram from "./ArchitectureDiagram";
-import { AlertCircle, Maximize2, X } from "lucide-react";
+import { AlertCircle, Maximize2, X, Copy, Check } from "lucide-react";
 
 /**
  * DiagramView Component
@@ -10,6 +10,17 @@ import { AlertCircle, Maximize2, X } from "lucide-react";
  */
 export default function DiagramView({ diagramData }) {
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(diagramData, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   if (!diagramData) {
     return null; // Don't show anything if no diagram data
@@ -69,8 +80,22 @@ export default function DiagramView({ diagramData }) {
         
         <div className="p-6">
           <details className="mt-0">
-            <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
-              View JSON Source
+            <summary className="cursor-pointer text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-2 justify-between">
+              <span>View JSON Source</span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCopyJson();
+                }}
+                className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                title={copied ? "Copied!" : "Copy to clipboard"}
+              >
+                {copied ? (
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
+                ) : (
+                  <Copy className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                )}
+              </button>
             </summary>
             <pre className="mt-2 text-xs bg-gray-800 dark:bg-gray-950 text-gray-300 dark:text-gray-400 p-4 rounded-lg overflow-auto max-h-60 border border-gray-700 dark:border-gray-800">
               {JSON.stringify(diagramData, null, 2)}
