@@ -33,6 +33,10 @@ CloudOptimal AI is an MVP tool to help entrepreneurs, SMBs, and consultants plan
    Edit `.env` and add your Gemini API key:
    ```
    VITE_GEMINI_API_KEY=your_actual_api_key_here
+
+   # Optional: override the Gemini model without code changes
+   # If omitted, the app will auto-select a stable Flash model and cache the last working one.
+   VITE_GEMINI_MODEL=gemini-2.5-flash
    ```
 
 3. **Start development server**

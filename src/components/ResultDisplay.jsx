@@ -170,6 +170,51 @@ export default function ResultDisplay({ aiResponse }) {
     }
   }
 
+  const detectProviderKey = (data) => {
+    const providerRaw =
+      data?.recommended_solution?.recommended_provider ||
+      data?.recommended_solution?.primary_provider ||
+      data?.recommended_solution?.provider ||
+      '';
+    const provider = String(providerRaw).toLowerCase();
+    if (provider.includes('aws') || provider.includes('amazon')) return 'aws';
+    if (provider.includes('azure') || provider.includes('microsoft')) return 'azure';
+    if (provider.includes('gcp') || provider.includes('google')) return 'gcp';
+    return null;
+  };
+
+  const getResourceTableTotalText = (data) => {
+    if (!data?.resource_table || data.resource_table.length === 0) return null;
+
+    const costComparison = data.cost_comparison;
+    if (costComparison) {
+      if (costComparison.multi_cloud_total) return costComparison.multi_cloud_total;
+
+      const providerKey = detectProviderKey(data);
+      if (providerKey === 'aws' && costComparison.aws_total) return costComparison.aws_total;
+      if (providerKey === 'azure' && costComparison.azure_total) return costComparison.azure_total;
+      if (providerKey === 'gcp' && costComparison.gcp_total) return costComparison.gcp_total;
+    }
+
+    const costs = data.resource_table.map(resource => {
+      const cost = resource.cost_monthly_est;
+      if (typeof cost === 'string') {
+        const match = cost.match(/\$?(\d+(?:,\d+)*(?:\.\d+)?)/);
+        return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+      }
+      return typeof cost === 'number' ? cost : 0;
+    });
+    const total = costs.reduce((sum, cost) => sum + cost, 0);
+    return total > 0 ? `$${total.toLocaleString()}` : 'Contact for pricing';
+  };
+
+  const getCostTotalCellClass = (isRecommended) =>
+    `px-4 py-2 text-sm font-bold ${
+      isRecommended
+        ? 'text-green-600 dark:text-green-400'
+        : 'text-gray-600 dark:text-gray-300'
+    }`;
+
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg overflow-hidden">
       <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-blue-900/30 border-b border-gray-200 dark:border-gray-700">
@@ -237,18 +282,7 @@ export default function ResultDisplay({ aiResponse }) {
                           Total Recommended Solution Cost
                         </td>
                         <td className="px-4 py-2 text-sm font-bold text-blue-600 dark:text-blue-400">
-                          {(() => {
-                            const costs = parsedData.resource_table.map(resource => {
-                              const cost = resource.cost_monthly_est;
-                              if (typeof cost === 'string') {
-                                const match = cost.match(/\$?(\d+(?:,\d+)*(?:\.\d+)?)/);
-                                return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
-                              }
-                              return typeof cost === 'number' ? cost : 0;
-                            });
-                            const total = costs.reduce((sum, cost) => sum + cost, 0);
-                            return total > 0 ? `$${total.toLocaleString()}` : 'Contact for pricing';
-                          })()}
+                          {getResourceTableTotalText(parsedData)}
                         </td>
                       </tr>
                     </tbody>
@@ -320,15 +354,25 @@ export default function ResultDisplay({ aiResponse }) {
                           {/* Multi-Provider Cost Display */}
                           {parsedData.cost_comparison.multi_cloud_total ? (
                             <>
-                              <td className="px-4 py-2 text-sm font-bold text-green-600 dark:text-green-400">{parsedData.cost_comparison.single_cloud_aws || 'N/A'}</td>
-                              <td className="px-4 py-2 text-sm font-bold text-green-600 dark:text-green-400">{parsedData.cost_comparison.single_cloud_azure || 'N/A'}</td>
-                              <td className="px-4 py-2 text-sm font-bold text-blue-600 dark:text-blue-400">Multi-Cloud: {parsedData.cost_comparison.multi_cloud_total}</td>
+                              <td className={getCostTotalCellClass(false)}>{parsedData.cost_comparison.single_cloud_aws || 'N/A'}</td>
+                              <td className={getCostTotalCellClass(false)}>{parsedData.cost_comparison.single_cloud_azure || 'N/A'}</td>
+                              <td className={getCostTotalCellClass(true)}>
+                                Multi-Cloud: {parsedData.cost_comparison.multi_cloud_total}
+                                {parsedData.cost_comparison.single_cloud_gcp ? ` (GCP: ${parsedData.cost_comparison.single_cloud_gcp})` : ''}
+                              </td>
                             </>
                           ) : (
                             <>
-                              <td className="px-4 py-2 text-sm font-bold text-green-600 dark:text-green-400">{parsedData.cost_comparison.aws_total}</td>
-                              <td className="px-4 py-2 text-sm font-bold text-green-600 dark:text-green-400">{parsedData.cost_comparison.azure_total}</td>
-                              <td className="px-4 py-2 text-sm font-bold text-green-600 dark:text-green-400">{parsedData.cost_comparison.gcp_total}</td>
+                              {(() => {
+                                const recommendedKey = detectProviderKey(parsedData);
+                                return (
+                                  <>
+                                    <td className={getCostTotalCellClass(recommendedKey === 'aws')}>{parsedData.cost_comparison.aws_total}</td>
+                                    <td className={getCostTotalCellClass(recommendedKey === 'azure')}>{parsedData.cost_comparison.azure_total}</td>
+                                    <td className={getCostTotalCellClass(recommendedKey === 'gcp')}>{parsedData.cost_comparison.gcp_total}</td>
+                                  </>
+                                );
+                              })()}
                             </>
                           )}
                         </tr>

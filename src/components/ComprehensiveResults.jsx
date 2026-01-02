@@ -50,6 +50,52 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
   const nextSteps = parsedData?.next_steps || parsedData?.implementation_steps || [];
   const providerRationale = parsedData?.provider_rationale || parsedData?.recommended_solution?.justification || "";
 
+  const detectProviderKey = () => {
+    const providerRaw =
+      recommendedProvider?.provider ||
+      parsedData?.recommended_solution?.recommended_provider ||
+      parsedData?.recommended_solution?.primary_provider ||
+      parsedData?.recommended_solution?.provider ||
+      '';
+    const provider = String(providerRaw).toLowerCase();
+    if (provider.includes('aws') || provider.includes('amazon')) return 'aws';
+    if (provider.includes('azure') || provider.includes('microsoft')) return 'azure';
+    if (provider.includes('gcp') || provider.includes('google')) return 'gcp';
+    return null;
+  };
+
+  const getResourceTableTotalText = () => {
+    if (!parsedData?.resource_table || parsedData.resource_table.length === 0) return null;
+
+    const costComparison = parsedData.cost_comparison;
+    if (costComparison) {
+      if (costComparison.multi_cloud_total) return costComparison.multi_cloud_total;
+
+      const providerKey = detectProviderKey();
+      if (providerKey === 'aws' && costComparison.aws_total) return costComparison.aws_total;
+      if (providerKey === 'azure' && costComparison.azure_total) return costComparison.azure_total;
+      if (providerKey === 'gcp' && costComparison.gcp_total) return costComparison.gcp_total;
+    }
+
+    const costs = parsedData.resource_table.map(resource => {
+      const cost = resource.cost_monthly_est;
+      if (typeof cost === 'string') {
+        const match = cost.match(/\$?(\d+(?:,\d+)*(?:\.\d+)?)/);
+        return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+      }
+      return typeof cost === 'number' ? cost : 0;
+    });
+    const total = costs.reduce((sum, cost) => sum + cost, 0);
+    return total > 0 ? `$${total.toLocaleString()}` : 'Contact for pricing';
+  };
+
+  const getCostTotalCellClass = (isRecommended) =>
+    `px-4 py-2 text-sm font-bold ${
+      isRecommended
+        ? 'text-green-600 dark:text-green-400'
+        : 'text-gray-600 dark:text-gray-300'
+    }`;
+
   // WAF pillars mapping with icons and colors - ALWAYS these 5, no more, no less
   const wafPillars = {
     security: { icon: Shield, color: 'yellow', label: 'Security' },
@@ -192,18 +238,7 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                       Total Recommended Solution Cost
                     </td>
                     <td className="px-4 py-2 text-sm font-bold text-blue-600 dark:text-blue-400">
-                      {(() => {
-                        const costs = parsedData.resource_table.map(resource => {
-                          const cost = resource.cost_monthly_est;
-                          if (typeof cost === 'string') {
-                            const match = cost.match(/\$?(\d+(?:,\d+)*(?:\.\d+)?)/);
-                            return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
-                          }
-                          return typeof cost === 'number' ? cost : 0;
-                        });
-                        const total = costs.reduce((sum, cost) => sum + cost, 0);
-                        return total > 0 ? `$${total.toLocaleString()}` : 'Contact for pricing';
-                      })()}
+                      {getResourceTableTotalText()}
                     </td>
                   </tr>
                 </tbody>
@@ -284,6 +319,39 @@ export default function ComprehensiveResults({ aiResponse, diagramData, recommen
                       <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">{row.gcp}</td>
                     </tr>
                   ))}
+
+                  {parsedData.cost_comparison && (
+                    <tr className="bg-gray-50 dark:bg-slate-700 font-medium">
+                      <td className="px-4 py-2 text-sm font-bold text-gray-700 dark:text-gray-200">Total Monthly Cost</td>
+                      {parsedData.cost_comparison.multi_cloud_total ? (
+                        <>
+                          <td className={getCostTotalCellClass(false)}>
+                            {parsedData.cost_comparison.single_cloud_aws || 'N/A'}
+                          </td>
+                          <td className={getCostTotalCellClass(false)}>
+                            {parsedData.cost_comparison.single_cloud_azure || 'N/A'}
+                          </td>
+                          <td className={getCostTotalCellClass(true)}>
+                            Multi-Cloud: {parsedData.cost_comparison.multi_cloud_total}
+                            {parsedData.cost_comparison.single_cloud_gcp ? ` (GCP: ${parsedData.cost_comparison.single_cloud_gcp})` : ''}
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          {(() => {
+                            const recommendedKey = detectProviderKey();
+                            return (
+                              <>
+                                <td className={getCostTotalCellClass(recommendedKey === 'aws')}>{parsedData.cost_comparison.aws_total}</td>
+                                <td className={getCostTotalCellClass(recommendedKey === 'azure')}>{parsedData.cost_comparison.azure_total}</td>
+                                <td className={getCostTotalCellClass(recommendedKey === 'gcp')}>{parsedData.cost_comparison.gcp_total}</td>
+                              </>
+                            );
+                          })()}
+                        </>
+                      )}
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>

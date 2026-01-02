@@ -87,9 +87,15 @@ RESPONSE MUST BE VALID JSON in this EXACT structure:
       {
         "from": "source node id (MUST be an id from nodes array - DO NOT use external entities like 'mobile-client', 'users', 'browser')",
         "to": "target node id (MUST be an id from nodes array - DO NOT use external entities)",
-        "label": "Connection type (e.g., 'Cross-Cloud Sync', 'Replication', 'HTTPS')",
-        "type": "Use 'dashed' for cross-cloud connections, 'solid' for intra-cloud. Each node should have max 3-4 outgoing connections for clarity."
+        "label": "Connection type (e.g., 'Cross-Cloud Sync', 'Replication', 'HTTPS API')",
+        "type": "Use 'dashed' for cross-cloud connections, 'solid' for intra-cloud. NEVER create bidirectional connections - use single connection with descriptive label."
       }
+    ],
+    "CRITICAL_CONNECTION_RULES": [
+      "NEVER create bidirectional connections (A→B AND B→A). Use SINGLE directional connection.",
+      "For request-response or sync: Use single connection with label like 'Data Sync' or 'API Requests/Responses'",
+      "Connection direction: from INITIATOR to SERVICE. App→Database, not Database→App.",
+      "Left connection point on ALL nodes = INPUT. Right connection point = OUTPUT."
     ]
   },
   "migration_strategy": {
@@ -105,6 +111,15 @@ CRITICAL MULTI-CLOUD REQUIREMENTS:
 1. ALWAYS return VALID JSON only - no markdown, no explanations
 2. Focus on WHY multi-cloud is beneficial for the specific requirements
 3. Include realistic complexity and cost considerations
+4. Show clear integration patterns between cloud providers
+5. Provide honest assessment of when single-cloud might be better
+6. Include specific services and realistic cost estimates
+7. NO BIDIRECTIONAL CONNECTIONS in architecture_diagram - use single directional connections with comprehensive labels
+
+PRE-RESPONSE VALIDATION:
+☐ Verify NO bidirectional connections exist (no A→B AND B→A pairs)
+☐ All connections flow logically (App→Database, not Database→App)
+☐ Connection labels are comprehensive (e.g., 'Read/Write Data' not separate 'Read' and 'Write' connections)
 4. Show clear integration patterns between cloud providers
 5. Provide honest assessment of when single-cloud might be better
 6. Include specific services and realistic cost estimates

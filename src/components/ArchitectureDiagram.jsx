@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 import ReactFlow, {
   Background,
   Controls,
@@ -22,6 +22,8 @@ const elk = new ELK();
 const CustomNode = ({ data }) => {
   const Icon = data.icon;
   const iconData = data.iconData;
+  const { isDark } = useTheme();
+  const handleColor = isDark ? '#94a3b8' : '#555';
 
   // Determine which handles to show based on node type and connections
   const handlePositions = data.handlePositions || {
@@ -41,13 +43,13 @@ const CustomNode = ({ data }) => {
             type="target"
             position={Position.Top}
             id="top"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
           <Handle
             type="source"
             position={Position.Top}
             id="top"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
         </>
       )}
@@ -57,13 +59,13 @@ const CustomNode = ({ data }) => {
             type="target"
             position={Position.Bottom}
             id="bottom"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
           <Handle
             type="source"
             position={Position.Bottom}
             id="bottom"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
         </>
       )}
@@ -73,13 +75,13 @@ const CustomNode = ({ data }) => {
             type="target"
             position={Position.Left}
             id="left"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
           <Handle
             type="source"
             position={Position.Left}
             id="left"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
         </>
       )}
@@ -89,13 +91,13 @@ const CustomNode = ({ data }) => {
             type="target"
             position={Position.Right}
             id="right"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
           <Handle
             type="source"
             position={Position.Right}
             id="right"
-            style={{ background: "#555", width: 8, height: 8 }}
+            style={{ background: handleColor, width: 8, height: 8 }}
           />
         </>
       )}
@@ -104,9 +106,15 @@ const CustomNode = ({ data }) => {
       <div className="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-transparent hover:border-blue-500 transition-all bg-transparent">
         {/* Icon */}
         <div className="mb-2">
-          {iconData ? (
+          {iconData?.svg ? (
             <img
-              src={`data:image/svg+xml;base64,${iconData}`}
+              src={iconData.svg}
+              alt={data.label}
+              className="w-12 h-12"
+            />
+          ) : typeof iconData === 'string' ? (
+            <img
+              src={iconData}
               alt={data.label}
               className="w-12 h-12"
             />
@@ -118,7 +126,7 @@ const CustomNode = ({ data }) => {
         </div>
 
         {/* Label */}
-        <div className="text-sm font-semibold text-white text-center min-w-[120px]">
+        <div className="text-sm font-semibold text-gray-900 dark:text-white text-center min-w-[120px]">
           {data.label}
         </div>
 
@@ -130,7 +138,7 @@ const CustomNode = ({ data }) => {
 
       {/* Tooltip on hover */}
       {data.description && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
           {data.description}
         </div>
       )}
@@ -244,7 +252,6 @@ const getLayoutedElements = async (nodes, edges) => {
     // Calculate bounds
     const positions = Object.values(positionedNodesMap);
     const minY = Math.min(...positions.map((p) => p.y));
-    const maxY = Math.max(...positions.map((p) => p.y));
     
     // Smart positioning for utilities based on available space and edges
     const utilityPositions = {};
@@ -271,12 +278,14 @@ const getLayoutedElements = async (nodes, edges) => {
     };
     
     utilityNodes.forEach((utilityNode) => {
-      // Find all nodes this utility connects to
-      const targetIds = dashedEdges
-        .filter(e => e.source === utilityNode.id)
-        .map(e => e.target);
+      // Find all nodes this utility connects to (in either direction).
+      // IMPORTANT: The AI sometimes outputs utilities as the *target* (e.g. workload -> Secret Manager).
+      // If we only look at outgoing edges, we misclassify utilities as "standalone" and place them far away.
+      const connectedNodeIds = dashedEdges
+        .filter(e => e.source === utilityNode.id || e.target === utilityNode.id)
+        .map(e => (e.source === utilityNode.id ? e.target : e.source));
       
-      const targetPositions = targetIds
+      const connectedPositions = connectedNodeIds
         .map(id => positionedNodesMap[id])
         .filter(Boolean);
       
@@ -284,8 +293,11 @@ const getLayoutedElements = async (nodes, edges) => {
       
       // Special positioning logic
       const nodeData = nodes.find(n => n.id === utilityNode.id);
-      const isSecurityInline = nodeData?.data?.layer === 'security' && targetIds.length <= 2 && targetIds.length > 0;
-      const isStandalone = targetIds.length === 0;
+      const layer = nodeData?.data?.layer;
+      const isOperations = layer === 'operations';
+      const isSecurity = layer === 'security';
+      const isSecurityInline = isSecurity && connectedNodeIds.length <= 2 && connectedNodeIds.length > 0;
+      const isStandalone = connectedNodeIds.length === 0;
       
       if (isStandalone) {
         // Standalone governance nodes (IAM): position at top-center
@@ -293,40 +305,48 @@ const getLayoutedElements = async (nodes, edges) => {
         proposedX = avgX + 200;
         proposedY = minY - 180;
         preferredDirection = 'above';
-      } else if (isSecurityInline && targetPositions.length === 2) {
-        // Security nodes: inline between protected nodes
-        const avgX = targetPositions.reduce((sum, p) => sum + p.x, 0) / targetPositions.length;
-        const avgY = targetPositions.reduce((sum, p) => sum + p.y, 0) / targetPositions.length;
+      } else if (isSecurityInline && connectedPositions.length >= 1) {
+        // Security nodes (Secret Manager, KMS): keep close to what they secure.
+        // Inline placement prevents huge vertical separation when one connected node happens to be high up.
+        const avgX = connectedPositions.reduce((sum, p) => sum + p.x, 0) / connectedPositions.length;
+        const avgY = connectedPositions.reduce((sum, p) => sum + p.y, 0) / connectedPositions.length;
         proposedX = avgX;
         proposedY = avgY;
         preferredDirection = 'inline';
-      } else if (targetPositions.length > 0) {
-        // Smart positioning: try above first, then below if crosses edges
-        const avgX = targetPositions.reduce((sum, p) => sum + p.x, 0) / targetPositions.length;
-        const minTargetY = Math.min(...targetPositions.map(p => p.y));
-        const maxTargetY = Math.max(...targetPositions.map(p => p.y));
-        
-        // Try above first
-        let aboveY = minTargetY - 180;
-        let belowY = maxTargetY + 180;
-        
-        const crossesAbove = wouldCrossEdges(avgX, aboveY, targetIds);
-        const crossesBelow = wouldCrossEdges(avgX, belowY, targetIds);
-        
-        // Choose position that doesn't cross edges
-        if (!crossesAbove) {
+      } else if (connectedPositions.length > 0) {
+        // Smart positioning for utilities.
+        // - Operations nodes: keep in a dedicated "top band" above the main flow.
+        // - Other utilities: prefer above/below near their connected cluster.
+        const avgX = connectedPositions.reduce((sum, p) => sum + p.x, 0) / connectedPositions.length;
+        const minConnY = Math.min(...connectedPositions.map(p => p.y));
+        const maxConnY = Math.max(...connectedPositions.map(p => p.y));
+
+        if (isOperations) {
+          // Always above to avoid getting inserted between main-flow nodes.
           proposedX = avgX;
-          proposedY = aboveY;
+          proposedY = Math.min(minConnY, minY) - 220;
           preferredDirection = 'above';
-        } else if (!crossesBelow) {
-          proposedX = avgX;
-          proposedY = belowY;
-          preferredDirection = 'below';
         } else {
-          // Both cross, choose above with more offset
-          proposedX = avgX;
-          proposedY = minTargetY - 250;
-          preferredDirection = 'above';
+          // Try above first, then below if it would intersect the main solid-edge envelope.
+          let aboveY = minConnY - 180;
+          let belowY = maxConnY + 180;
+
+          const crossesAbove = wouldCrossEdges(avgX, aboveY, connectedNodeIds);
+          const crossesBelow = wouldCrossEdges(avgX, belowY, connectedNodeIds);
+        
+          if (!crossesAbove) {
+            proposedX = avgX;
+            proposedY = aboveY;
+            preferredDirection = 'above';
+          } else if (!crossesBelow) {
+            proposedX = avgX;
+            proposedY = belowY;
+            preferredDirection = 'below';
+          } else {
+            proposedX = avgX;
+            proposedY = minConnY - 250;
+            preferredDirection = 'above';
+          }
         }
       } else {
         // Fallback
@@ -495,16 +515,11 @@ export default function ArchitectureDiagram({ data }) {
   const [hoveredEdge, setHoveredEdge] = React.useState(null);
   const { isDark } = useTheme(); // Get current theme
 
-  if (!data || !data.nodes || !data.connections) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-400">
-        No diagram data available
-      </div>
-    );
-  }
+  const hasValidData = Boolean(data && Array.isArray(data.nodes) && Array.isArray(data.connections));
 
-  // Convert our data format to ReactFlow format
   const initialNodes = useMemo(() => {
+    if (!hasValidData) return [];
+
     return data.nodes.map((node) => {
       // Get icon
       let iconComponent = null;
@@ -541,9 +556,15 @@ export default function ArchitectureDiagram({ data }) {
         position: { x: 0, y: 0 }, // Will be set by layout
       };
     });
-  }, [data]);
+  }, [data, hasValidData]);
 
   const initialEdges = useMemo(() => {
+    if (!hasValidData) return [];
+
+    // Theme-aware edge colors
+    const dashedColor = isDark ? "#6366f1" : "#4f46e5";
+    const solidColor = isDark ? "#22c55e" : "#16a34a";
+
     // Filter out non-connection fields and ensure valid connections
     const validConnections = (data.connections || []).filter(
       (conn) =>
@@ -554,13 +575,47 @@ export default function ArchitectureDiagram({ data }) {
         !Array.isArray(conn)
     );
 
+    // Helper function to calculate optimal connection points based on node positions
+    const calculateConnectionPoints = (sourceNode, targetNode, isDashed) => {
+      if (!sourceNode || !targetNode) return { source: 'right', target: 'left' };
+      
+      const dx = targetNode.position.x - sourceNode.position.x;
+      const dy = targetNode.position.y - sourceNode.position.y;
+      
+      // For dashed (utility) connections - use vertical approach
+      if (isDashed) {
+        if (dy < -50) return { source: 'top', target: 'bottom' }; // Target is above
+        if (dy > 50) return { source: 'bottom', target: 'top' };   // Target is below
+        if (dx > 0) return { source: 'right', target: 'left' };    // Target is to the right
+        return { source: 'left', target: 'right' };                 // Target is to the left
+      }
+      
+      // For solid (main flow) connections - enforce left-to-right flow
+      // Source uses RIGHT connection point (output)
+      // Target uses LEFT connection point (input from logical flow)
+      if (dx > 50) {
+        // Standard left-to-right flow
+        return { source: 'right', target: 'left' };
+      } else if (dx < -50) {
+        // Backward connection (should be rare)
+        return { source: 'left', target: 'right' };
+      } else {
+        // Vertical alignment - use top/bottom
+        if (dy > 50) return { source: 'bottom', target: 'top' };
+        return { source: 'top', target: 'bottom' };
+      }
+    };
+
     return validConnections.map((conn, idx) => {
       const isDashed = conn.type === "dashed";
+      
+      const sourceNode = initialNodes.find(n => n.id === conn.from);
+      const targetNode = initialNodes.find(n => n.id === conn.to);
+      const { source: sourceHandle, target: targetHandle } = calculateConnectionPoints(sourceNode, targetNode, isDashed);
 
       // Initial handles (will be updated post-layout based on positions)
-      // Default to vertical for dashed, horizontal for solid
-      const initialSourceHandle = isDashed ? "bottom" : "right";
-      const initialTargetHandle = isDashed ? "top" : "left";
+      const initialSourceHandle = sourceHandle;
+      const initialTargetHandle = targetHandle;
 
       return {
         id: `e${idx}-${conn.from}-${conn.to}`,
@@ -573,7 +628,7 @@ export default function ArchitectureDiagram({ data }) {
         type: "smoothstep",
         animated: false,
         style: {
-          stroke: isDashed ? "#6366f1" : "#22c55e",
+          stroke: isDashed ? dashedColor : solidColor,
           strokeWidth: 2,
           strokeDasharray: isDashed ? "5,5" : "none",
         },
@@ -581,11 +636,11 @@ export default function ArchitectureDiagram({ data }) {
           type: MarkerType.ArrowClosed,
           width: 20,
           height: 20,
-          color: isDashed ? "#6366f1" : "#22c55e",
+          color: isDashed ? dashedColor : solidColor,
         },
       };
     });
-  }, [data]);
+  }, [data, hasValidData, initialNodes, isDark]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -625,53 +680,67 @@ export default function ArchitectureDiagram({ data }) {
       setLayoutComplete(true);
     };
 
+    if (!hasValidData) {
+      setNodes([]);
+      setEdges([]);
+      setLayoutComplete(true);
+      return;
+    }
+
     if (initialNodes.length > 0 && initialEdges.length > 0) {
       applyLayout();
     }
-  }, [initialNodes, initialEdges, setNodes, setEdges]);
+  }, [hasValidData, initialNodes, initialEdges, setNodes, setEdges]);
 
   return (
-    <div className="w-full h-full bg-slate-900 relative">
+    <div className="w-full h-full relative bg-white dark:bg-slate-900">
+      {!hasValidData && (
+        <div className="flex items-center justify-center h-full text-gray-400">
+          No diagram data available
+        </div>
+      )}
       {!layoutComplete && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-slate-900/80 z-10">
           <div className="text-gray-400">Generating diagram layout...</div>
         </div>
       )}
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onEdgeMouseEnter={(event, edge) => setHoveredEdge(edge)}
-        onEdgeMouseLeave={() => setHoveredEdge(null)}
-        nodeTypes={nodeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        attributionPosition="bottom-left"
-        className="bg-slate-900"
-        minZoom={0.1}
-        maxZoom={2}
-        defaultEdgeOptions={{
-          type: "smoothstep",
-        }}
-      >
-        <Background color="#475569" gap={16} />
-        <Controls className="bg-slate-800 border-slate-700" />
-        <MiniMap
-          className="bg-slate-800 border-slate-700"
-          nodeColor={(node) => {
-            const layerColors = {
-              networking: "#06B6D4",
-              presentation: "#3B82F6",
-              application: "#8B5CF6",
-              data: "#10B981",
-              operations: "#F59E0B",
-              security: "#EF4444",
-            };
-            return layerColors[node.data.layer] || "#6366f1";
+      {hasValidData && (
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onEdgeMouseEnter={(event, edge) => setHoveredEdge(edge)}
+          onEdgeMouseLeave={() => setHoveredEdge(null)}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.3 }}
+          attributionPosition="bottom-left"
+          className="bg-white dark:bg-slate-900"
+          minZoom={0.1}
+          maxZoom={2}
+          defaultEdgeOptions={{
+            type: "smoothstep",
           }}
-        />
-      </ReactFlow>
+        >
+          <Background color={isDark ? "#475569" : "#E6EEF8"} gap={16} />
+          <Controls className="bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700" />
+          <MiniMap
+            className="bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700"
+            nodeColor={(node) => {
+              const layerColors = {
+                networking: "#06B6D4",
+                presentation: "#3B82F6",
+                application: "#8B5CF6",
+                data: "#10B981",
+                operations: "#F59E0B",
+                security: "#EF4444",
+              };
+              return layerColors[node.data.layer] || "#6366f1";
+            }}
+          />
+        </ReactFlow>
+      )}
 
       {/* Edge label tooltip on hover */}
       {hoveredEdge && hoveredEdge.data?.label && (

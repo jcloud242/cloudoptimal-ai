@@ -8,7 +8,6 @@ export default function PromptInput({ onSubmit, disabled, placeholder, loading, 
     e.preventDefault();
     if (!userInput.trim() || disabled) return;
     onSubmit(userInput);
-    setUserInput("");
   };
 
   return (
